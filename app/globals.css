@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0e13;
+  --foreground: #e9e5da;
+  --bg: #0a0e13;
+  --bg-deep: #05070b;
+  --ink: #0a0e13;
+  --ink-deep: #05070b;
+  --orange: #ff5a1f;
+  --ice: #7fa0b8;
+  --ice-dim: rgba(127, 160, 184, 0.6);
+  --olive: #57603f;
+  --paper: #e9e5da;
+  --paper-dim: rgba(233, 229, 218, 0.7);
+  --line: rgba(233, 229, 218, 0.1);
+  --surface: rgba(10, 14, 19, 0.88);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-deep: var(--bg-deep);
+  --color-ink: var(--ink);
+  --color-ink-deep: var(--ink-deep);
+  --color-orange: var(--orange);
+  --color-ice: var(--ice);
+  --color-ice-dim: var(--ice-dim);
+  --color-olive: var(--olive);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --font-display: var(--font-archivo);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --animate-aurora: aurora-drift 24s ease-in-out infinite alternate;
+  --animate-twinkle: twinkle ease-in-out infinite;
+  --animate-drift: drift linear infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes aurora-drift {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { transform: translate(3%, 4%) rotate(2.5deg) scale(1.06); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-110vh); }
+}
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plex-sans), "IBM Plex Sans", Helvetica, sans-serif;
+}
+
+.crt-scanline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(127,160,184,0.03) 2px, rgba(127,160,184,0.03) 4px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(127,160,184,0.06);
+  pointer-events: none;
+}
+.crosshair::before {
+  top: 50%; left: 0; right: 0; height: 1px;
+}
+.crosshair::after {
+  left: 50%; top: 0; bottom: 0; width: 1px;
+}
+
+.card-hover {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(127,160,184,0.3);
+  box-shadow: 0 8px 32px rgba(255,90,31,0.06);
+}
+
+.tag-hover {
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.tag-hover:hover {
+  background: rgba(255,90,31,0.08);
+  border-color: rgba(255,90,31,0.3);
+  color: var(--orange);
+}
+
+h1, h2, h3, h4, h5, h6,
+[class*="font-display"] {
+  font-family: var(--font-archivo), "Archivo", "Archivo Expanded", sans-serif;
+  font-stretch: 125%;
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.hero-sub p {
+  max-width: 440px;
+}
+
+.hero-word {
+  display: inline;
 }

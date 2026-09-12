@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tactical Sci-Fi Portfolio - Demo UI</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#FF5500',
+              ice: '#38BDF8',
+              dark: '#08090D',
+              panel: 'rgba(11, 15, 23, 0.75)'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #08090D;
+      color: #e2e8f0;
+      cursor: none; /* Cursore personalizzato tattico */
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar tattica arancione */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #08090D; }
+    ::-webkit-scrollbar-thumb { background: #FF5500; border-radius: 2px; }
+
+    /* Effetto Vetro (Frost Glass) */
+    .glass-card {
+      background: rgba(13, 18, 28, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 0.2s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
+      transform-style: preserve-3d;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 85, 0, 0.5);
+      box-shadow: 0 0 30px rgba(255, 85, 0, 0.2);
+    }
+
+    /* Cursore Tattico Personalizzato */
+    #cursor-dot {
+      pointer-events: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 6px; height: 6px;
+      background: #FF5500;
+      border-radius: 50%;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    #cursor-ring {
+      pointer-events: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 32px; height: 32px;
+      border: 1px solid rgba(255, 85, 0, 0.6);
+      border-radius: 50%;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, border-color 0.2s;
+    }
+
+    /* Effetto crosshair del mirino */
+    #cursor-ring::before, #cursor-ring::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 85, 0, 0.8);
+    }
+    #cursor-ring::before { top: 50%; left: -4px; right: -4px; height: 1px; transform: translateY(-50%); }
+    #cursor-ring::after { left: 50%; top: -4px; bottom: -4px; width: 1px; transform: translateX(-50%); }
+
+    /* Canvas Sfondo */
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased selection:bg-brand-orange selection:text-black">
+
+  <!-- Cursore Tattico -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- Canvas Sfondo Spaziale / Neve Tattica -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Navbar Superiore Tattica -->
+  <header class="fixed top-0 left-0 w-full z-50 glass-card !border-x-0 !border-t-0 bg-opacity-80">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between font-mono text-xs">
+      <div class="flex items-center gap-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-brand-orange animate-ping"></span>
+        <span class="font-bold text-white tracking-widest">// TAC_PORTFOLIO_OS</span>
+        <span class="text-slate-500 hidden sm:inline">v2.6.9</span>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <div class="hidden md:flex items-center gap-2 text-slate-400">
+          <i data-lucide="compass" class="w-4 h-4 text-brand-ice"></i>
+          <span>LOC: 78.2° N // ARCTIC_ORBIT</span>
+        </div>
+        <!-- Pulsante Suono UI (Sintetizzatore Web Audio) -->
+        <button id="sfx-btn" onclick="toggleSFX()" class="flex items-center gap-2 px-3 py-1.5 rounded border border-brand-orange/30 text-brand-orange hover:bg-brand-orange/10 transition">
+          <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+          <span id="sfx-status">SFX: ACTIVE</span>
+        </button>
+      </div>
+    </div>
+    <!-- Scroll Bar Progresso -->
+    <div id="scroll-bar" class="h-[2px] bg-brand-orange w-0 transition-all duration-75"></div>
+  </header>
+
+  <!-- Contenuto Principale -->
+  <main class="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-24 space-y-32">
+
+    <!-- HERO SECTION -->
+    <section class="min-h-[70vh] flex flex-col justify-center items-start space-y-6">
+      
+      <!-- Status Badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>STATUS: AVAILABLE FOR NEW MISSIONS</span>
+      </div>
+
+      <!-- Titolo Impattante -->
+      <h1 class="text-5xl sm:text-7xl font-extrabold text-white tracking-tight leading-none">
+        FRONTEND <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange via-orange-400 to-brand-ice">
+          DEVELOPER & UI ARCHITECT
+        </span>
+      </h1>
+
+      <p class="max-w-xl text-slate-400 text-lg leading-relaxed font-light">
+        Sviluppo interfacce ad altissimo impatto visivo, ispirate alle esplorazioni spaziali e alla precisione tattica.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="pt-4 flex flex-wrap gap-4 font-mono text-xs">
+        <a href="#projects" class="px-6 py-3.5 rounded bg-brand-orange text-black font-bold flex items-center gap-2 hover:bg-orange-400 transition shadow-[0_0_20px_rgba(255,85,0,0.4)]">
+          <i data-lucide="crosshair" class="w-4 h-4"></i>
+          VISUALIZZA PROGETTI
+        </a>
+        <a href="#contact" class="px-6 py-3.5 rounded border border-white/20 text-white font-semibold flex items-center gap-2 hover:border-brand-ice hover:text-brand-ice transition">
+          <i data-lucide="terminal" class="w-4 h-4"></i>
+          INIZIA TRASMISSIONE
+        </a>
+      </div>
+    </section>
+
+
+    <!-- PROGETTI SECTION ("MISSION LOGS") -->
+    <section id="projects" class="space-y-12">
+      <div class="flex items-end justify-between border-b border-white/10 pb-4">
+        <div>
+          <span class="font-mono text-xs text-brand-orange tracking-widest">// ARCHIVE_LOGS</span>
+          <h2 class="text-3xl font-bold text-white mt-1">PROGETTI IN EVIDENZA</h2>
+        </div>
+        <span class="font-mono text-xs text-slate-500 hidden sm:block">SELECT_TARGET TO EXPAND</span>
+      </div>
+
+      <!-- Griglia Progetti -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- CARD 1 -->
+        <div class="glass-card rounded-xl p-8 relative overflow-hidden group cursor-pointer" onmousemove="tiltCard(event, this)" onmouseleave="resetCard(this)">
+          <div class="absolute top-4 right-4 font-mono text-[10px] text-brand-orange tracking-widest">
+            LOG_01 // ACTIVE
+          </div>
+
+          <!-- Micro dettaglio decorativo militare -->
+          <div class="text-[10px] font-mono text-slate-600 mb-2">COORD: 45.4642° N, 9.1900° E</div>
+
+          <h3 class="text-2xl font-bold text-white group-hover:text-brand-orange transition-colors flex items-center gap-2">
+            Astro Tactical Framework
+          </h3>
+          <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+            Un'interfaccia ad alte prestazioni sviluppata per il tracciamento satellitare in tempo reale con componenti reattivi in Astro e Tailwind.
+          </p>
+
+          <div class="flex flex-wrap gap-2 mt-6">
+            <span class="px-2 py-1 font-mono text-[11px] bg-slate-800 text-brand-ice border border-brand-ice/20 rounded">#ASTRO</span>
+            <span class="px-2 py-1 font-mono text-[11px] bg-slate-800 text-brand-orange border border-brand-orange/20 rounded">#TAILWIND</span>
+            <span class="px-2 py-1 font-mono text-[11px] bg-slate-800 text-slate-300 border border-white/10 rounded">#TYPESCRIPT</span>
+          </div>
+
+          <div class="mt-8 pt-4 border-t border-white/5 flex items-center justify-between font-mono text-xs">
+            <span class="text-brand-orange flex items-center gap-1 group-hover:translate-x-2 transition-transform">
+              EXPLORE_PROJECT <i data-lucide="arrow-right" class="w-4 h-4 inline"></i>
+            </span>
+            <i data-lucide="shield-check" class="w-4 h-4 text-slate-600"></i>
+          </div>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="glass-card rounded-xl p-8 relative overflow-hidden group cursor-pointer" onmousemove="tiltCard(event, this)" onmouseleave="resetCard(this)">
+          <div class="absolute top-4 right-4 font-mono text-[10px] text-brand-ice tracking-widest">
+            LOG_02 // COMPLETED
+          </div>
+
+          <div class="text-[10px] font-mono text-slate-600 mb-2">SYSTEM: DEEP_SPACE_MONITOR</div>
+
+          <h3 class="text-2xl font-bold text-white group-hover:text-brand-ice transition-colors flex items-center gap-2">
+            Frostbite UI Component Library
+          </h3>
+          <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+            Design system ispirato agli ambienti artici. Effetti glassmorphism avanzati, micro-animazioni fluide e contrasto ad alta visibilità.
+          </p>
+
+          <div class="flex flex-wrap gap-2 mt-6">
+            <span class="px-2 py-1 font-mono text-[11px] bg-slate-800 text-brand-orange border border-brand-orange/20 rounded">#REACT</span>
+            <span class="px-2 py-1 font-mono text-[11px] bg-slate-800 text-brand-ice border border-brand-ice/20 rounded">#FRAMER_MOTION</span>
+            <span class="px-2 py-1 font-mono text-[11px] bg-slate-800 text-slate-300 border border-white/10 rounded">#STORYBOOK</span>
+          </div>
+
+          <div class="mt-8 pt-4 border-t border-white/5 flex items-center justify-between font-mono text-xs">
+            <span class="text-brand-ice flex items-center gap-1 group-hover:translate-x-2 transition-transform">
+              EXPLORE_PROJECT <i data-lucide="arrow-right" class="w-4 h-4 inline"></i>
+            </span>
+            <i data-lucide="snowflake" class="w-4 h-4 text-slate-600"></i>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CONTACT SECTION ("INITIATE TRANSMISSION") -->
+    <section id="contact" class="glass-card rounded-2xl p-8 sm:p-12 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-2xl space-y-6">
+        <span class="font-mono text-xs text-brand-orange tracking-widest">// TRANSMISSION_MODULE</span>
+        <h2 class="text-3xl font-bold text-white">VUOI INIZIARE UNA COLLABORAZIONE?</h2>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          Invia un messaggio per discutere opportunità lavorative, progetti freelance o semplici scambi di idee.
+        </p>
+
+        <form onsubmit="event.preventDefault(); alert('Segnale inviato con successo!');" class="space-y-4 pt-4 font-mono text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">CALLSIGN / NOME</label>
+            <input type="text" placeholder="Es. Mario Rossi" class="w-full bg-slate-900/80 border border-white/10 rounded p-3 text-white focus:outline-none focus:border-brand-orange transition">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">CANALE DI COMUNICAZIONE / EMAIL</label>
+            <input type="email" placeholder="nome@azienda.com" class="w-full bg-slate-900/80 border border-white/10 rounded p-3 text-white focus:outline-none focus:border-brand-orange transition">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">PAYLOAD / MESSAGGIO</label>
+            <textarea rows="4" placeholder="Scrivi qui i dettagli..." class="w-full bg-slate-900/80 border border-white/10 rounded p-3 text-white focus:outline-none focus:border-brand-orange transition"></textarea>
+          </div>
+
+          <button type="submit" class="w-full sm:w-auto px-8 py-4 bg-brand-orange text-black font-bold rounded flex items-center justify-center gap-2 hover:bg-orange-400 transition shadow-[0_0_20px_rgba(255,85,0,0.3)]">
+            <i data-lucide="radio" class="w-4 h-4"></i>
+            INVIA SEGNALE TATTICO
+          </button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Script Interattività e Animazioni -->
+  <script>
+    // Inizializza Icone Lucide
+    lucide.createIcons();
+
+    // 1. GESTIONE CURSORE TATTICO E SUONI
+    const cursorDot = document.getElementById('cursor-dot');
+    const cursorRing = document.getElementById('cursor-ring');
+    let audioCtx = null;
+    let sfxEnabled = true;
+
+    function playTacticalSound(freq = 800, type = 'sine', duration = 0.05) {
+      if (!sfxEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    function toggleSFX() {
+      sfxEnabled = !sfxEnabled;
+      document.getElementById('sfx-status').innerText = sfxEnabled ? "SFX: ACTIVE" : "SFX: MUTED";
+      if(sfxEnabled) playTacticalSound(1200, 'square', 0.08);
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      cursorDot.style.left = `${e.clientX}px`;
+      cursorDot.style.top = `${e.clientY}px`;
+      
+      cursorRing.animate({
+        left: `${e.clientX}px`,
+        top: `${e.clientY}px`
+      }, { duration: 200, fill: "forwards" });
+    });
+
+    // Effetto audio sui click/hover dei bottoni
+    document.querySelectorAll('a, button, input, textarea, .glass-card').forEach(el => {
+      el.addEventListener('mouseenter', () => playTacticalSound(600, 'sine', 0.03));
+      el.addEventListener('click', () => playTacticalSound(1200, 'square', 0.06));
+    });
+
+    // 2. TILT 3D SULLE CARD PROGETTI
+    function tiltCard(event, card) {
+      const rect = card.getBoundingClientRect();
+      const x = event.clientX - rect.left - rect.width / 2;
+      const y = event.clientY - rect.top - rect.height / 2;
+      card.style.transform = `perspective(1000px) rotateX(${-y / 20}deg) rotateY(${x / 20}deg) translateY(-5px)`;
+    }
+
+    function resetCard(card) {
+      card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
+    }
+
+    // 3. BARRA DI SCROLL IN CIMA
+    window.addEventListener('scroll', () => {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('scroll-bar').style.width = scrolled + '%';
+    });
+
+    // 4. CANVA SFONDO (Particelle Spaziali / Fiocchi di Neve Tattici)
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 70; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.8 + 0.5,
+        color: Math.random() > 0.3 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 85, 0, 0.6)',
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: Math.random() * 0.5 + 0.2
+      });
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.y > canvas.height) p.y = 0;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.x < 0) p.x = canvas.width;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
+</body>
+</html>
