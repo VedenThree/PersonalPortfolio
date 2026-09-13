@@ -1,6 +1,9 @@
 "use client";
 
 import Reveal from "@/components/animations/reveal";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 const CONTACT_METHODS = [
   {
@@ -37,7 +40,7 @@ export default function Contact() {
                 key={m.label}
                 className="flex items-center gap-4 font-mono group"
               >
-                <span className="text-orange text-base shrink-0 w-5 text-center leading-[1]">
+                <span className="text-orange text-base shrink-0 size-5 text-center leading-[1]">
                   {m.icon}
                 </span>
                 <div>
@@ -67,38 +70,23 @@ export default function Contact() {
                 <label className="font-mono text-[10px] tracking-[0.15em] text-ice-dim uppercase block mb-1.5">
                   Nome
                 </label>
-                <input
-                  type="text"
-                  placeholder="Il tuo nome"
-                  className="w-full bg-surface border border-line rounded px-4 py-3 font-mono text-sm text-paper placeholder:text-ice-dim/40 focus:border-orange transition-colors"
-                />
+                <Input placeholder="Il tuo nome" />
               </div>
               <div>
                 <label className="font-mono text-[10px] tracking-[0.15em] text-ice-dim uppercase block mb-1.5">
                   Email
                 </label>
-                <input
-                  type="email"
-                  placeholder="la tua email"
-                  className="w-full bg-surface border border-line rounded px-4 py-3 font-mono text-sm text-paper placeholder:text-ice-dim/40 focus:border-orange transition-colors"
-                />
+                <Input type="email" placeholder="la tua email" />
               </div>
               <div>
                 <label className="font-mono text-[10px] tracking-[0.15em] text-ice-dim uppercase block mb-1.5">
                   Messaggio
                 </label>
-                <textarea
-                  rows={4}
-                  placeholder="Descrivi la tua richiesta..."
-                  className="w-full bg-surface border border-line rounded px-4 py-3 font-mono text-sm text-paper placeholder:text-ice-dim/40 focus:border-orange transition-colors resize-none"
-                />
+                <Textarea placeholder="Descrivi la tua richiesta..." />
               </div>
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2.5 border border-orange font-mono text-[13px] px-[26px] py-3.5 text-orange transition-all duration-200 hover:bg-orange hover:text-ink [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
-              >
+              <Button variant="primary" size="default">
                 Invia Segnale ↓
-              </button>
+              </Button>
             </form>
           </div>
         </div>

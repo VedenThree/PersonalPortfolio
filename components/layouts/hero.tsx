@@ -31,7 +31,7 @@ export default function Hero() {
           <p className="hero-sub mt-9">
             <span className="block max-w-[440px] text-base text-paper-dim" style={{ animation: "reveal-up 0.6s cubic-bezier(0.16,1,0.3,1) both", animationDelay: "0.55s" }}>
               Da React a MongoDB, da Next.js a MySQL: costruisco sistemi
-              digitali completi, dal primo byte all'ultima riga di codice.
+              digitali completi, dal primo byte all&apos;ultima riga di codice.
             </span>
           </p>
 

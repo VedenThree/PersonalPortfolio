@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 
 export default function Reveal({
   children,
@@ -14,7 +14,7 @@ export default function Reveal({
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  const checkVisibility = useCallback(() => {
     const el = ref.current;
     if (!el) return;
     const supported =
@@ -37,6 +37,10 @@ export default function Reveal({
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    checkVisibility();
+  }, [checkVisibility]);
 
   return (
     <div
