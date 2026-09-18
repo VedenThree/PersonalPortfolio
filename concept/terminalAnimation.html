@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal to Tactical Projects - Anime.js</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #04090e;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #e0e6ed;
+      height: 550vh; /* Spazio fluido per lo scroll */
+      overflow-x: hidden;
+    }
+
+    .scroll-hint {
+      position: fixed;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      color: #ff9955;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      z-index: 100;
+    }
+
+    .viewport {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* CONTENITORE TERMINALE / GRID (Morfico) */
+    .hud-container {
+      width: 480px;
+      height: 250px;
+      background: rgba(10, 20, 30, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 102, 0, 0.4);
+      box-shadow: 0 0 30px rgba(255, 102, 0, 0.15);
+      border-radius: 6px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .hud-header {
+      font-family: 'Courier New', monospace;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px stroke rgba(255, 102, 0, 0.25);
+      padding-bottom: 10px;
+      font-size: 11px;
+      color: #ffaa55;
+      letter-spacing: 1.5px;
+      margin-bottom: 15px;
+    }
+
+    /* TESTO TERMINALE INIZIALE */
+    .console-text {
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+      color: #ff6600;
+    }
+
+    .line { opacity: 0; }
+
+    /* GRIGLIA PROGETTI (Sbloccata a fine scroll) */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      top: 55px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+    }
+
+    /* STRUTTURA CARD TATTICA */
+    .tactical-card {
+      background: rgba(12, 22, 32, 0.85);
+      border: 1px solid rgba(255, 102, 0, 0.25);
+      clip-path: polygon(
+        0 10px, 10px 0, 
+        100% 0, 100% calc(100% - 10px), 
+        calc(100% - 10px) 100%, 0 100%
+      );
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-decoration: none;
+      color: inherit;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .tactical-card:hover {
+      border-color: #ff6600;
+      background: rgba(255, 102, 0, 0.08);
+      box-shadow: 0 0 20px rgba(255, 102, 0, 0.2);
+      transform: translateY(-3px) !important;
+    }
+
+    .card-meta {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #ff9955;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-online {
+      color: #00ff66;
+      font-weight: bold;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 6px 0 4px 0;
+    }
+
+    .tactical-card:hover .card-title {
+      color: #ff6600;
+    }
+
+    .card-desc {
+      font-size: 11.5px;
+      color: #90a0b0;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      color: #ffaa55;
+      background: rgba(255, 102, 0, 0.08);
+      border: 1px solid rgba(255, 102, 0, 0.25);
+      padding: 2px 5px;
+    }
+
+    /* BARRA PROGRESSO A TACCHE LED */
+    .progress-bar {
+      display: flex;
+      gap: 3px;
+    }
+
+    .tick {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tick.active {
+      background: #ff6600;
+      box-shadow: 0 0 4px rgba(255, 102, 0, 0.7);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scroll-hint">▼ SCORRI PER DISPIEGARE I PROGETTI TATTICI ▼</div>
+
+  <div class="viewport">
+    <div class="hud-container" id="hudContainer">
+      
+      <!-- Header Stazione -->
+      <div class="hud-header">
+        <span>[ ARCHIVE_SECTOR: PROJECTS ]</span>
+        <span id="hudStatus">STATUS: LOADING</span>
+      </div>
+
+      <!-- Testo Terminale -->
+      <div class="console-text" id="consoleText">
+        <div class="line line-1">> INITIATING DEPLOYMENT SEQUENCE...</div>
+        <div class="line line-2">> UNLOCKING ARCTIC DATA MODULES [4/4]</div>
+        <div class="line line-3">> MOUNTING TACTICAL CARDS... [OK]</div>
+      </div>
+
+      <!-- Griglia Progetti (4 Card) -->
+      <div class="projects-grid" id="projectsGrid">
+        
+        <!-- CARD 01 -->
+        <a href="#project-1" class="tactical-card">
+          <div>
+            <div class="card-meta">
+              <span>// SEC_01</span>
+              <span class="status-online">• ONLINE</span>
+            </div>
+            <div class="card-title">Orbital Telemetry</div>
+            <div class="card-desc">Piattaforma 3D in tempo reale per la gestione dei vettori di volo spaziali.</div>
+            <div class="card-tags">
+              <span class="tag">// REACT</span>
+              <span class="tag">// THREE.JS</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick"></div>
+          </div>
+        </a>
+
+        <!-- CARD 02 -->
+        <a href="#project-2" class="tactical-card">
+          <div>
+            <div class="card-meta">
+              <span>// SEC_02</span>
+              <span class="status-online">• ONLINE</span>
+            </div>
+            <div class="card-title">Arctic Sensor Hub</div>
+            <div class="card-desc">Dashboard di monitoraggio per stazioni meteorologiche polari ad alto rendimento.</div>
+            <div class="card-tags">
+              <span class="tag">// TYPESCRIPT</span>
+              <span class="tag">// WEBSOCKET</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick active"></div>
+          </div>
+        </a>
+
+        <!-- CARD 03 -->
+        <a href="#project-3" class="tactical-card">
+          <div>
+            <div class="card-meta">
+              <span>// SEC_03</span>
+              <span class="status-online">• ONLINE</span>
+            </div>
+            <div class="card-title">Tactical Radar UI</div>
+            <div class="card-desc">Interfaccia canvas per la simulazione e tracciamento di segnali sonar e radar.</div>
+            <div class="card-tags">
+              <span class="tag">// GLSL</span>
+              <span class="tag">// CANVAS</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick"></div><div class="tick"></div>
+          </div>
+        </a>
+
+        <!-- CARD 04 -->
+        <a href="#project-4" class="tactical-card">
+          <div>
+            <div class="card-meta">
+              <span>// SEC_04</span>
+              <span class="status-online">• ONLINE</span>
+            </div>
+            <div class="card-title">Neural Cyber Engine</div>
+            <div class="card-desc">Motore grafico modulare per il rendering di interfacce cyber futuristiche.</div>
+            <div class="card-tags">
+              <span class="tag">// NEXT.JS</span>
+              <span class="tag">// TAILWIND</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick active"></div><div class="tick"></div>
+          </div>
+        </a>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Anime.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  
+  <script>
+    // Timeline Anime.js legata allo scroll
+    const tl = anime.timeline({
+      autoplay: false,
+      easing: 'easeInOutQuad'
+    });
+
+    tl
+    // 1. Comparsa Terminale
+    .add({
+      targets: '#hudContainer',
+      opacity: [0, 1],
+      scale: [0.85, 1],
+      duration: 500
+    })
+    // 2. Stampa righe di diagnostica
+    .add({ targets: '.line-1', opacity: [0, 1], translateY: [5, 0], duration: 300 })
+    .add({ targets: '.line-2', opacity: [0, 1], translateY: [5, 0], duration: 300 })
+    .add({ targets: '.line-3', opacity: [0, 1], translateY: [5, 0], duration: 300 })
+    
+    // 3. Espansione della console e scomparsa testo terminale
+    .add({
+      targets: '#hudContainer',
+      width: ['480px', '820px'],
+      height: ['250px', '450px'],
+      borderColor: ['rgba(255, 102, 0, 0.4)', '#ff6600'],
+      boxShadow: ['0 0 30px rgba(255, 102, 0, 0.15)', '0 0 45px rgba(255, 102, 0, 0.25)'],
+      duration: 800
+    })
+    .add({
+      targets: '#consoleText',
+      opacity: [1, 0],
+      duration: 300
+    }, '-=800')
+
+    // 4. Attivazione Griglia Progetti e Animazione a Cascata (Stagger) per le 4 Card
+    .add({
+      targets: '#projectsGrid',
+      opacity: [0, 1],
+      begin: () => {
+        document.getElementById('projectsGrid').style.pointerEvents = 'auto';
+        document.getElementById('hudStatus').innerText = 'STATUS: DEPLOYED';
+        document.getElementById('hudStatus').style.color = '#00ff66';
+      },
+      duration: 200
+    })
+    .add({
+      targets: '.tactical-card',
+      opacity: [0, 1],
+      translateY: [20, 0],
+      delay: anime.stagger(100), // Entrata in sequenza delle 4 card
+      duration: 450
+    });
+
+    // Mappatura Scroll -> Timeline
+    window.addEventListener('scroll', () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+      tl.seek(tl.duration * scrollPercent);
+    });
+  </script>
+</body>
+</html>

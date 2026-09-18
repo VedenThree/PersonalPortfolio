@@ -7,12 +7,12 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-[1px] bg-orange rotate-45" />
-            <span className="font-mono text-[13px] tracking-[0.02em] text-paper font-medium">
+            <span className="font-mono text-[12px] tracking-[0.02em] text-paper font-medium">
               FD / 01
             </span>
           </div>
-          <p className="font-mono text-[11px] text-ice-dim">
-            <span className="text-orange">◈</span> Codice, sistemi, dati —{" "}
+          <p className="font-mono text-[10px] text-ice-dim">
+            <span className="text-orange">◈</span> Codice, sistemi, dati ·{" "}
             <span className="text-paper/60">Italia</span>
           </p>
           <nav className="flex gap-6 list-none">

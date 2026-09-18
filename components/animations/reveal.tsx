@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 
 export default function Reveal({
   children,
@@ -14,7 +14,7 @@ export default function Reveal({
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
-  const checkVisibility = useCallback(() => {
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const supported =
@@ -22,8 +22,8 @@ export default function Reveal({
       CSS.supports &&
       CSS.supports("animation-timeline", "view()");
     if (supported) {
-      setVisible(true);
-      return;
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
     }
     const obs = new IntersectionObserver(
       ([entry]) => {
@@ -38,14 +38,10 @@ export default function Reveal({
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    checkVisibility();
-  }, [checkVisibility]);
-
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 cubic-bezier(0.16,1,0.3,1) ${
+      className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       } ${className}`}
       style={{ animationDelay: `${delay}ms` }}
