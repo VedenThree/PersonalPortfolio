@@ -44,7 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <BgScene />
         <NavBar />
-        <div className="lg:pl-[220px] w-full">
+        <div className="w-full pl-[52px] lg:pl-[220px]">
           <div className="max-w-[1180px] mx-auto px-8 w-full relative z-[1] flex flex-col flex-1">
             {children}
           </div>

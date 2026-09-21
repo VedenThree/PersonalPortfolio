@@ -1,5 +1,4 @@
 import HeroOrbital from "../ui/HeroOrbital";
-import HeroTerminal from "../ui/HeroConsole";
 
 export default function Hero() {
   return (
@@ -35,10 +34,6 @@ export default function Hero() {
             affidabili con MongoDB.
           </span>
         </p>
-
-        <div className="mt-10">
-          <HeroTerminal/>
-        </div>
 
         <div className="hero-cta mt-10 flex flex-wrap gap-4">
           <a

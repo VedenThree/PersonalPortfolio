@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
   { num: "01", label: "Progetti", id: "lavori" },
   { num: "02", label: "Profilo", id: "profilo" },
   { num: "03", label: "Contatti", id: "contatti" },
-];
+] as const;
 
-export default function NavBar() {
-  const [active, setActive] = useState(NAV_ITEMS[0].id);
+const ROW = 68;
+
+function useNavScroll() {
+  const [active, setActive] = useState<string>(NAV_ITEMS[0].id);
 
   useEffect(() => {
     const onScroll = () => {
       const pos = window.scrollY + window.innerHeight * 0.35;
-      let current = NAV_ITEMS[0].id;
+      let current: string = NAV_ITEMS[0].id;
       for (const item of NAV_ITEMS) {
         const el = document.getElementById(item.id);
         if (!el) continue;
@@ -33,31 +36,96 @@ export default function NavBar() {
     };
   }, []);
 
-  const scrollTo = (id: string) =>
+  const goTo = (id: string) => {
+    if (id === "lavori") {
+      window.dispatchEvent(new CustomEvent("play-projects"));
+      return;
+    }
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return { active, goTo };
+}
+
+function MobileRail({
+  active,
+  goTo,
+}: {
+  active: string;
+  goTo: (id: string) => void;
+}) {
+  return (
+    <aside className="fixed left-0 top-0 z-50 flex h-screen w-[52px] flex-col items-center border-r border-line bg-[#05070b]/90 py-5 lg:hidden">
+      <button
+        onClick={() => goTo("lavori")}
+        aria-label="Home"
+        className="mb-8 flex size-7 shrink-0 cursor-pointer items-center justify-center bg-orange"
+      >
+        <span className="font-mono text-[11px] font-extrabold leading-none text-white">
+          FD
+        </span>
+      </button>
+
+      <nav className="flex flex-1 flex-col items-center gap-6">
+        {NAV_ITEMS.map(({ num, label, id }) => {
+          const isActive = active === id;
+          return (
+            <button
+              key={id}
+              onClick={() => goTo(id)}
+              aria-label={label}
+              className={`flex cursor-pointer flex-col items-center gap-1.5 transition-colors ${
+                isActive ? "text-orange" : "text-ice-dim/40 hover:text-ice"
+              }`}
+            >
+              <span className="font-mono text-[9px] leading-none tracking-[1px]">
+                {num}
+              </span>
+              <span
+                className={`inline-block size-[3px] rotate-45 rounded-[1px] transition-colors ${
+                  isActive ? "bg-orange" : "bg-ice/25"
+                }`}
+              />
+            </button>
+          );
+        })}
+      </nav>
+
+      <div
+        className="size-[6px] shrink-0 rounded-full bg-[#22c55e] animate-pulse-glow"
+        title="Online"
+      />
+    </aside>
+  );
+}
+
+export default function NavBar() {
+  const { active, goTo } = useNavScroll();
+  const activeIndex = Math.max(
+    0,
+    NAV_ITEMS.findIndex((n) => n.id === active),
+  );
 
   return (
     <>
-      {/* Sidebar (desktop) */}
-      <aside className="fixed top-0 left-0 h-screen w-[220px] hidden lg:flex flex-col z-50 bg-[rgba(6,6,11,0.97)] border-r border-orange/20">
-        {/* Logo / Identity */}
-        <div className="border-b border-orange/20 px-5 pt-6 pb-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="bg-orange flex items-center justify-center size-9 shrink-0">
-              <span className="font-mono font-extrabold text-[16px] text-white leading-none tracking-widest">
+      <aside className="fixed left-0 top-0 z-50 hidden h-screen w-[220px] flex-col bg-[#05070b]/90 backdrop-blur-[12px] lg:flex">
+        <div className="border-b border-line px-5 pb-5 pt-6">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center bg-orange">
+              <span className="font-mono font-extrabold leading-none text-white">
                 FD
               </span>
             </div>
             <div>
-              <p className="font-mono text-[8px] text-ice-dim tracking-[1.2px]">
+              <p className="font-display text-[15px] font-bold uppercase leading-none tracking-[1.5px] text-paper">
                 FD / 01
               </p>
-              <p className="font-mono text-[7.5px] text-ice-dim/70 tracking-[0.9px]">
-                WEB DEVELOPER
+              <p className="mt-1.5 font-mono text-[7.5px] uppercase tracking-[0.9px] text-ice-dim/70">
+                SISTEMA WEB DEV
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-between border-t border-ice/10 pt-3">
             <div className="flex items-end gap-0.5">
               {[1, 2, 3].map((i) => (
                 <div
@@ -66,101 +134,80 @@ export default function NavBar() {
                   style={{ height: `${6 + i * 2}px` }}
                 />
               ))}
-              <div className="w-[3px] h-[12px] bg-orange/10" />
+              <div className="w-[3px] bg-orange/10" style={{ height: 12 }} />
             </div>
-            <p className="font-mono text-[7.5px] text-ice-dim/70 tracking-[0.7px]">
+            <span className="font-mono text-[7.5px] tracking-[0.7px] text-ice-dim/70">
               SIGNAL 3/4
-            </p>
+            </span>
           </div>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex flex-col flex-1 pt-2">
+        <nav className="relative flex flex-1 flex-col pt-1">
+          <span
+            aria-hidden
+            className="absolute left-0 top-0 h-full w-px bg-ice/10"
+          />
+          <span
+            aria-hidden
+            className="absolute left-0 top-0 h-[68px] w-[2px] bg-orange transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{ transform: `translateY(${activeIndex * ROW}px)` }}
+          />
           {NAV_ITEMS.map(({ num, label, id }) => {
             const isActive = active === id;
             return (
               <button
                 key={id}
-                onClick={() => scrollTo(id)}
-                className={`flex items-center h-[68px] px-5 border-b border-ice/5 text-left relative overflow-hidden transition-colors cursor-pointer ${
+                onClick={() => goTo(id)}
+                className={`group flex h-[68px] cursor-pointer items-center border-b border-ice/5 px-5 text-left transition-colors ${
                   isActive ? "bg-orange/5" : "hover:bg-ice/5"
                 }`}
               >
-                <div
-                  aria-hidden
-                  className="absolute left-0 top-0 bottom-0 w-[3px] bg-orange origin-top"
-                  style={{
-                    transform: isActive ? "scaleY(1)" : "scaleY(0)",
-                    opacity: isActive ? 1 : 0,
-                    transition:
-                      "transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
-                  }}
-                />
-                <div className="flex flex-col">
+                <span className="flex flex-col">
                   <span
-                    className={`font-mono text-[9px] leading-none tracking-[1.23px] ${
-                      isActive ? "text-orange/60" : "text-ice-dim/50"
+                    className={`font-mono text-[9px] leading-none tracking-[1.23px] transition-colors ${
+                      isActive ? "text-orange" : "text-ice-dim/50"
                     }`}
                   >
                     {num}
                   </span>
                   <span
-                    className={`font-display font-bold text-[16px] tracking-[1.6px] leading-[1.6] uppercase ${
-                      isActive ? "text-orange" : "text-paper/70"
+                    className={`font-display mt-1.5 text-[16px] font-bold uppercase leading-none tracking-[1.6px] transition-colors ${
+                      isActive ? "text-paper" : "text-paper/60 group-hover:text-paper/80"
                     }`}
                   >
                     {label}
                   </span>
-                </div>
-                {isActive && (
-                  <span className="ml-auto font-mono text-[10px] text-orange">▶</span>
-                )}
+                </span>
+                <ChevronRight
+                  className={`ml-auto size-3.5 shrink-0 transition-colors ${
+                    isActive ? "text-orange" : "text-transparent"
+                  }`}
+                  strokeWidth={2}
+                />
               </button>
             );
           })}
         </nav>
 
-        {/* Geolocation + status */}
-        <div className="border-t border-orange/15 px-5 py-4">
-          <div className="font-mono text-[9px] text-ice-dim tracking-[0.88px] leading-[1.8] mb-2">
-            <p>LAT 46.2074°N</p>
-            <p>LON 09.0200°E</p>
-            <p>ALT 122m ASL</p>
+        <div className="border-t border-ice/15 px-5 py-4">
+          <div className="mb-3 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 font-mono text-[8px] tracking-[0.88px] text-ice-dim/80">
+            <span>LAT</span>
+            <span className="text-right">46.2074°N</span>
+            <span>LON</span>
+            <span className="text-right">09.0200°E</span>
+            <span>ALT</span>
+            <span className="text-right">122m ASL</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="size-[6px] rounded-full bg-[#22c55e]" />
-            <span className="font-mono text-[9px] text-[#22c55e] tracking-[0.88px]">
+            <span className="size-[6px] rounded-full bg-[#22c55e] animate-pulse-glow" />
+            <span className="font-mono text-[8px] tracking-[0.88px] text-[#22c55e]">
               ONLINE
             </span>
           </div>
         </div>
       </aside>
 
-      {/* Mobile top bar */}
-      <header className="lg:hidden sticky top-0 z-50 bg-surface/90 backdrop-blur-[8px] border-b border-line">
-        <div className="flex items-center justify-between px-6 py-[14px]">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.25 h-2.25 rounded-[1px] bg-orange rotate-45 shrink-0 animate-pulse-glow" />
-            <span className="text-[14px] tracking-[0.02em] text-paper font-medium font-mono">
-              FD / 01
-            </span>
-          </div>
-          <nav>
-            <ul className="flex gap-5 list-none">
-              {NAV_ITEMS.map(({ label, id }) => (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    className="text-ice no-underline text-[12px] font-mono tracking-[0.02em] transition-colors hover:text-orange"
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <MobileRail active={active} goTo={goTo} />
     </>
   );
 }
