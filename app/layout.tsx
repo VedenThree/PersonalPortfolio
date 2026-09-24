@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans,JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/layouts/navbar";
 import BgScene from "@/components/layouts/bg-scene";
@@ -24,6 +24,12 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
 });
 
+const jetbrainMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "FD / 01 — Full Stack Web Developer",
   description: "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
@@ -38,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         archivo.variable,
         plexSans.variable,
         plexMono.variable,
+        jetbrainMono.variable,
         "font-sans",
       )}
     >
