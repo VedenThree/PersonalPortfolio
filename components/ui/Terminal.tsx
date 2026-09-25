@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  type ReactNode,
-} from "react";
+import { forwardRef, useImperativeHandle, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import CrtSweep from "@/components/ui/CrtSweep";
 
@@ -38,6 +33,13 @@ type TerminalProps = {
   className?: string;
 };
 
+// Riferimenti DOM di una riga, usati dalla timeline per digitarla e cancellarla
+type Row = {
+  prompt: HTMLSpanElement | null;
+  chars: (HTMLSpanElement | null)[];
+  res: HTMLSpanElement | null;
+};
+
 const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   {
     title,
@@ -54,14 +56,11 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   const statusRef = useRef<HTMLSpanElement | null>(null);
   const cursorRef = useRef<HTMLSpanElement | null>(null);
   const layerRef = useRef<HTMLDivElement | null>(null);
-  const rowsRef = useRef<
-    {
-      prompt: HTMLSpanElement | null;
-      chars: (HTMLSpanElement | null)[];
-      res: HTMLSpanElement | null;
-    }[]
-  >(lines.map(() => ({ prompt: null, chars: [], res: null })));
+  const rowsRef = useRef<Row[]>(
+    lines.map(() => ({ prompt: null, chars: [], res: null })),
+  );
 
+  // Il terminale non anima nulla da solo: espone i nodi e li guida projects.tsx
   useImperativeHandle(
     ref,
     () => ({
@@ -80,20 +79,17 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     <div
       ref={boxRef}
       className={cn(
-        "bg-[#0b101d] border border-[#1b2438] rounded-[2px] w-full relative overflow-hidden",
+        "bg-[#0b101d] border border-[#1b2438] rounded-xs w-full relative overflow-hidden",
         className,
       )}
-      // Niente will-change: transform. Il box viene scalato dalla timeline, e
-      // su un layer promosso il browser rasterizza i glifi una volta sola e poi
-      // li riscala come bitmap: il testo resta sfocato per tutta l'animazione
-      // (e anche dopo, sulle card). Senza layer, Chrome ridisegna alla scala
-      // reale a ogni frame.
+      // Niente will-change: sotto un layer promosso i glifi verrebbero riscalati
+      // come bitmap, quindi sfocati per tutta l'animazione.
       style={{
         opacity: 0,
         transformOrigin: "top center",
       }}
     >
-      {/* CRT scanline texture */}
+      {/* Texture CRT + fascio di dati, entrambi overlay decorativi */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -104,16 +100,15 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           zIndex: 1,
         }}
       />
-      {/* Ambient data sweep */}
       <CrtSweep />
 
-      {/* Terminal header bar */}
+      {/* Header: pallini, titolo, stato live */}
       <div className="relative border-b border-[#1b2438] px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex gap-1.5 shrink-0">
-            <span className="size-[10px] rounded-full bg-[#ff5c00]" />
-            <span className="size-[10px] rounded-full bg-[#64748b]" />
-            <span className="size-[10px] rounded-full bg-[#64748b]" />
+            <span className="size-2.5 rounded-full bg-[#ff5c00]" />
+            <span className="size-2.5 rounded-full bg-[#64748b]" />
+            <span className="size-2.5 rounded-full bg-[#64748b]" />
           </div>
           <p className="font-mono text-[11px] text-[#7d90a5] ml-2 whitespace-nowrap overflow-hidden tracking-[0.14em]">
             {title}
@@ -133,10 +128,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
       {/* Terminal body */}
       <div className="relative">
-        {/* Content layer (cards) — defines the natural height */}
+        {/* Le card definiscono l'altezza naturale del terminale */}
         <div className="relative z-10 p-5">{children}</div>
 
-        {/* Typed lines layer */}
+        {/* Righe digitate: overlay assoluto sulle card, pilotato da fuori */}
         <div
           ref={layerRef}
           className="absolute inset-0 z-20 pointer-events-none flex flex-col gap-2.5 px-5 pt-5 pb-5"
@@ -157,15 +152,15 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               </span>
               <span
                 className={cn(
-                  "font-mono text-[13px] flex-1 overflow-hidden whitespace-nowrap",
+                  "font-mono text-[13px] flex-1 overflow-hidden whitespace-pre",
                   line.ready
                     ? "text-[#ff5c00] font-bold"
                     : line.module
                       ? "text-[#8497ab]"
                       : "text-[#b9c7d6]",
                 )}
-                style={{ whiteSpace: "pre" }}
               >
+                {/* Un span per carattere: la timeline li accende uno a uno */}
                 {line.cmd.split("").map((c, j) => (
                   <span
                     key={j}
@@ -181,7 +176,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               {line.ready ? (
                 <span
                   ref={cursorRef}
-                  className="inline-block w-[9px] h-[16px] bg-[#ff5c00] shrink-0"
+                  className="inline-block w-2.25 h-4 bg-[#ff5c00] shrink-0"
                   style={{ opacity: 0 }}
                 />
               ) : line.res ? (
