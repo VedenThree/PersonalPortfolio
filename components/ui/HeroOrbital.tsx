@@ -5,6 +5,9 @@ import { useEffect, useRef } from "react";
 const BOX = 460;
 const CENTER = BOX / 2;
 const SEED = 12323234;
+const SWEEP_PERIOD = 6000;
+const RING_OUTER_PERIOD = 18000;
+const RING_INNER_PERIOD = 11000;
 
 // Utility: converte un valore nel sistema di coordinate BOX in % del contenitore reale
 const pct = (v: number) => `${((v / BOX) * 100).toFixed(4)}%`;
@@ -48,6 +51,8 @@ const TARGETS: Target[] = (() => {
 
 export default function HeroOrbital() {
   const sweepRef = useRef<HTMLDivElement | null>(null);
+  const ringOuterRef = useRef<HTMLDivElement | null>(null);
+  const ringInnerRef = useRef<HTMLDivElement | null>(null);
   const bearingRef = useRef<HTMLParagraphElement | null>(null);
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const hitsRef = useRef<number[]>(TARGETS.map(() => 0));
@@ -62,6 +67,8 @@ export default function HeroOrbital() {
     let raf = 0;
     let last = performance.now();
     let angle = 0;
+    let outerAngle = 0;
+    let innerAngle = 0;
     let phase = 0;
     let visible = true;
 
@@ -69,9 +76,19 @@ export default function HeroOrbital() {
       if (bearing) bearing.textContent = `${String(Math.round(wrap360(deg))).padStart(3, "0")}°`;
     };
 
+    const paintRings = () => {
+      if (ringOuterRef.current) {
+        ringOuterRef.current.style.transform = `rotate(${wrap360(outerAngle).toFixed(4)}deg)`;
+      }
+      if (ringInnerRef.current) {
+        ringInnerRef.current.style.transform = `rotate(${wrap360(innerAngle).toFixed(4)}deg)`;
+      }
+    };
+
     const paintStatic = () => {
       writeBearing(angle);
       sweep.style.transform = `rotate(${wrap360(angle).toFixed(2)}deg)`;
+      paintRings();
     };
 
     const onVisibility = () => {
@@ -90,10 +107,13 @@ export default function HeroOrbital() {
         return;
       }
 
-      angle = wrap360(angle - (dt * 360) / 6000);
+      angle = wrap360(angle - (dt * 360) / SWEEP_PERIOD);
+      outerAngle = wrap360(outerAngle - (dt * 360) / RING_OUTER_PERIOD);
+      innerAngle = wrap360(innerAngle - (dt * 360) / RING_INNER_PERIOD);
       phase += dt / 1000;
 
       sweep.style.transform = `rotate(${angle.toFixed(4)}deg)`;
+      paintRings();
       writeBearing(190 + 150 * Math.sin(phase * 0.9));
 
       dotRefs.current.forEach((dot, i) => {
@@ -153,9 +173,10 @@ export default function HeroOrbital() {
           />
         </div>
 
-        {/* Anello esterno: 320/460 = 69.57% */}
+        {/* Anello esterno: 320/460 = 69.57% — 18s/giro, contro-orario */}
         <div
-          className="arc-ring absolute inset-0 m-auto"
+          ref={ringOuterRef}
+          className="arc-ring absolute inset-0 m-auto will-change-transform"
           style={{ width: pct(320), height: pct(320), opacity: 0.08 }}
         />
 
@@ -179,8 +200,12 @@ export default function HeroOrbital() {
           ))}
         </div>
 
-        {/* Anello interno: 220/460 = 47.83% */}
-        <div className="arc-ring absolute inset-0 m-auto" style={{ width: pct(220), height: pct(220) }} />
+        {/* Anello interno: 220/460 = 47.83% — 11s/giro, contro-orario */}
+        <div
+          ref={ringInnerRef}
+          className="arc-ring absolute inset-0 m-auto will-change-transform"
+          style={{ width: pct(220), height: pct(220) }}
+        />
       </div>
 
       {/* Nucleo centrale: 110/460 = 23.91% — testo sempre alla sua dimensione reale, mai scalato */}
