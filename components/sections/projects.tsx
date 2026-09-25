@@ -111,8 +111,9 @@ export default function Projects() {
     };
     const easeInOutCubic = (t: number) =>
       t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    const easeInOutQuart = (t: number) =>
-      t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+    // Front-loaded: parte subito a piena velocità, poi si assesta. Il mix
+    // con la lineare tiene la corsa costante nella fetta centrale.
+    const easeTour = (t: number) => 0.35 * (1 - Math.pow(1 - t, 3)) + 0.65 * t;
 
     const startTour = () => {
       stopTour();
@@ -127,8 +128,8 @@ export default function Projects() {
         window.scrollTo({ top: oEnd, behavior: "smooth" });
         return;
       }
-      const travelDur = Math.max(120, Math.min(900, travelDist * 0.35));
-      const tourDur = Math.max(2600, tlDuration * 1.35);
+      const travelDur = Math.max(90, Math.min(420, travelDist * 0.22));
+      const tourDur = Math.max(1500, tlDuration * 0.78);
       const total = travelDur + tourDur;
       const t0 = performance.now();
       touring = true;
@@ -142,8 +143,7 @@ export default function Projects() {
         } else {
           y =
             oStart +
-            tourDist *
-              easeInOutQuart((t - travelDur / total) / (1 - travelDur / total));
+            tourDist * easeTour((t - travelDur / total) / (1 - travelDur / total));
         }
         window.scrollTo(0, Math.max(0, Math.round(y)));
         if (t < 1) tourRaf = requestAnimationFrame(step);
@@ -229,13 +229,13 @@ export default function Projects() {
     // 3. Maximize the terminal window (slow, so the typed text can be read)
     tl.add(box, {
       scale: [0.85, 1],
-      duration: U * 0.38,
+      duration: U * 0.3,
       ease: "inOutExpo",
     });
 
     // 3b. SOSTA: terminale massimizzato con le parole visibili. Dead-time
-    // lungo quasi quanto il typewriter → sullo scroll ci si ferma a leggere.
-    tl.add(box, { opacity: [1, 1], duration: U * 0.95 });
+    // accorciato: sullo scroll ci si ferma a leggere senza bruciare corsa.
+    tl.add(box, { opacity: [1, 1], duration: U * 0.7 });
 
     // 4. Clear the screen (lines scroll away)
     const clearTargets = [

@@ -12,47 +12,50 @@ const RING_OUTER_PERIOD = 18000;
 const RING_INNER_PERIOD = 11000;
 
 // Seed fisso: i target devono restare sempre sugli stessi pixel.
-const SEED = 12323234;
+// Scelto perché spalma bene i 6 target (distanza minima fra due angoli ~55°);
+// con l'LCG qui sotto cambiare il seed può anche accorpiarli.
+const SEED = 58930482;
 
 const pct = (v: number) => `${((v / BOX) * 100).toFixed(4)}%`;
 
 type Target = {
-  left: number;
-  top: number;
+  angle: number;
+  radius: number;
   size: number;
   base: number;
-  angle: number;
+  left: number;
+  top: number;
 };
-
-// PRNG deterministico: stesso seed, stessa sequenza.
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 // Angolo sempre in [0, 360), per poter accumulare senza crescere all'infinito.
 const wrap360 = (deg: number) => ((deg % 360) + 360) % 360;
 
 // I 6 target arancioni, generati una volta sola fuori dal render.
+// Ogni target nasce come posizione sul cerchio: angle in gradi (0° in alto,
+// senso orario) e radius in px dal centro. left/top sono il suo tradotto in
+// coordinate di schermo, calcolato una volta: x = r·sin, y = −r·cos.
+// rng è un LCG lineare con periodo completo 2^32: per 6 valori una tantum
+// basta, e il seed fisso li rende identici a ogni reload.
 const TARGETS: Target[] = (() => {
-  const rng = mulberry32(SEED);
+  let s = SEED;
+  const rng = () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
   return Array.from({ length: 6 }, () => {
-    const a = rng() * Math.PI * 2;
-    const r = 62 + rng() * 86;
+    const angle = rng() * 360;
+    const radius = 62 + rng() * 86;
     const size = Math.round(3.5 + rng() * 2.5);
-    const left = CENTER - size / 2 + r * Math.cos(a);
-    const top = CENTER - size / 2 + r * Math.sin(a);
-    // Posizione del target in gradi, 0° in alto, senso orario.
-    const cx = left + size / 2;
-    const cy = top + size / 2;
-    const angle = wrap360((Math.atan2(cy - CENTER, cx - CENTER) * 180) / Math.PI + 90);
-    return { left, top, size, base: 0.2 + rng() * 0.25, angle };
+    const rad = (angle * Math.PI) / 180;
+    const half = size / 2;
+    return {
+      angle,
+      radius,
+      size,
+      base: 0.2 + rng() * 0.25,
+      left: CENTER - half + radius * Math.sin(rad),
+      top: CENTER - half - radius * Math.cos(rad),
+    };
   });
 })();
 
