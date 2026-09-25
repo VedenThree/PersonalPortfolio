@@ -40,11 +40,11 @@ function ASCIIProgressBar({ p }: { p: Project }) {
     i < Math.round((p.completion / 100) * 12) ? "█" : "░",
   );
   return (
-    <p className="m-0 text-[12px] leading-[1.7]">
+    <p className="m-0 text-[13px] leading-[1.7]">
       <span className="text-[#7a8ca1]">$</span>{" "}
       <span className="text-[#93a6b8]">PROG</span>{" "}
       <span className="text-[#ff5c00]">&gt;</span>{" "}
-      <span className="text-[#5d7187]">[</span>
+      <span className="text-[#7a8ca1]">[</span>
       {cells.map((c, i) => (
         <span
           key={i}
@@ -55,7 +55,7 @@ function ASCIIProgressBar({ p }: { p: Project }) {
           {c}
         </span>
       ))}
-      <span className="text-[#5d7187]">]</span>{" "}
+      <span className="text-[#7a8ca1]">]</span>{" "}
       <span style={{ color: meta.hex }}>{p.completion}%</span>
     </p>
   );
@@ -287,17 +287,7 @@ export default function Projects() {
         }),
       );
     }
-    const scan = h.scan();
-    if (scan) {
-      loops.push(
-        animate(scan, {
-          translateX: ["-160%", "560%"],
-          duration: 4200,
-          ease: "inOutSine",
-          loop: true,
-        }),
-      );
-    }
+    // Il fascio overlay è gestito da <CrtSweep /> dentro Terminal.
 
     // Scroll observer di anime.js: lega la timeline allo scrolling.
     tl.pause();
@@ -396,7 +386,11 @@ export default function Projects() {
                   ref={(el) => {
                     cardRefs.current[i] = el;
                   }}
-                  className="will-change-transform h-full"
+                  // Niente will-change: il terminale è scalato dalla timeline, e
+                  // un layer promosso sotto un antenato scalato viene riscalato
+                  // come bitmap → testo sgranato. Il reveal (opacity + translateY,
+                  // ~0.16U) si ridisegna senza problemi.
+                  className="h-full"
                   style={{ opacity: 0, transform: "translateY(18px)" }}
                 >
                   <div
@@ -418,11 +412,11 @@ export default function Projects() {
                       "rounded-[2px]",
                       selected === p.id
                         ? "border-[#ff5c00]/70 bg-[rgba(255,92,0,0.05)]"
-                        : "border-[#26344a]",
+                        : "border-[#2f3f59]",
                     )}
                     style={{
                       background:
-                        "linear-gradient(135deg, rgba(168,196,212,0.03) 0%, rgba(11,16,29,0.9) 100%)",
+                        "linear-gradient(135deg, rgba(127,160,184,0.06) 0%, rgba(9,13,24,0.94) 100%)",
                     }}
                   >
                     {/* ASCII corner glyphs */}
@@ -472,7 +466,7 @@ export default function Projects() {
                     </span>
 
                     {/* Header row */}
-                    <div className="flex items-baseline gap-2 border-b border-[#26344a] pb-3 mb-3">
+                    <div className="flex items-baseline gap-2 border-b border-[#2f3f59] pb-3 mb-3">
                       <span className="text-[15px] font-bold text-[#ff5c00]">
                         {p.num}
                       </span>
@@ -494,7 +488,7 @@ export default function Projects() {
 
                     {/* Body rows */}
                     <div className="flex flex-1 flex-col gap-2">
-                      <p className="m-0 text-[12px] leading-[1.7]">
+                      <p className="m-0 text-[13px] leading-[1.7]">
                         <span className="text-[#7a8ca1]">$</span>{" "}
                         <span className="text-[#93a6b8]">DESC</span>{" "}
                         <span className="text-[#ff5c00]">&gt;</span>{" "}
@@ -502,7 +496,7 @@ export default function Projects() {
                           {p.desc || "[ ---- DATI_IN_CODA ---- ]"}
                         </span>
                       </p>
-                      <p className="m-0 text-[12px] leading-[1.7]">
+                      <p className="m-0 text-[13px] leading-[1.7]">
                         <span className="text-[#7a8ca1]">$</span>{" "}
                         <span className="text-[#93a6b8]">TAGS</span>{" "}
                         <span className="text-[#ff5c00]">&gt;</span>{" "}
@@ -520,7 +514,7 @@ export default function Projects() {
                     </div>
 
                     {/* Footer row */}
-                    <div className="mt-3 flex items-center justify-between border-t border-[#26344a] pt-3 text-[11px]">
+                    <div className="mt-3 flex items-center justify-between border-t border-[#2f3f59] pt-3 text-[11px]">
                       <span className="text-[#7a8ca1] tracking-[0.12em]">
                         {p.missionId}
                       </span>

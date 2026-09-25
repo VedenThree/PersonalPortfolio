@@ -1,6 +1,7 @@
 "use client";
 
 import Reveal from "@/components/animations/reveal";
+import CrtSweep from "@/components/ui/CrtSweep";
 
 const DETAILS = [
   {
@@ -52,6 +53,7 @@ export default function Contact() {
             {/* Console di riepilogo canale */}
             <div className="border border-[#1b2438] rounded bg-[#0b101d] relative overflow-hidden">
               <div className="crt-scanline absolute inset-0 pointer-events-none opacity-50" />
+              <CrtSweep />
               <div className="relative border-b border-[#1b2438] px-4 py-2.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="flex gap-1.5 shrink-0">

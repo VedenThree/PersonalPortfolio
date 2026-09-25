@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
+import CrtSweep from "@/components/ui/CrtSweep";
 
 export type TerminalLine = {
   id: string;
@@ -19,7 +20,6 @@ export type TerminalLine = {
 
 export type TerminalHandle = {
   box: () => HTMLDivElement | null;
-  scan: () => HTMLSpanElement | null;
   status: () => HTMLSpanElement | null;
   cursor: () => HTMLSpanElement | null;
   layer: () => HTMLDivElement | null;
@@ -51,7 +51,6 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   ref,
 ) {
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const scanRef = useRef<HTMLSpanElement | null>(null);
   const statusRef = useRef<HTMLSpanElement | null>(null);
   const cursorRef = useRef<HTMLSpanElement | null>(null);
   const layerRef = useRef<HTMLDivElement | null>(null);
@@ -67,7 +66,6 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     ref,
     () => ({
       box: () => boxRef.current,
-      scan: () => scanRef.current,
       status: () => statusRef.current,
       cursor: () => cursorRef.current,
       layer: () => layerRef.current,
@@ -85,21 +83,29 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         "bg-[#0b101d] border border-[#1b2438] rounded-[2px] w-full relative overflow-hidden",
         className,
       )}
+      // Niente will-change: transform. Il box viene scalato dalla timeline, e
+      // su un layer promosso il browser rasterizza i glifi una volta sola e poi
+      // li riscala come bitmap: il testo resta sfocato per tutta l'animazione
+      // (e anche dopo, sulle card). Senza layer, Chrome ridisegna alla scala
+      // reale a ogni frame.
       style={{
         opacity: 0,
         transformOrigin: "top center",
-        willChange: "transform",
       }}
     >
       {/* CRT scanline texture */}
-      <div className="crt-scanline absolute inset-0 pointer-events-none opacity-60" />
-      {/* Ambient data sweep */}
       <span
-        ref={scanRef}
         aria-hidden
-        className="pointer-events-none absolute top-0 left-0 h-full w-24 bg-gradient-to-r from-transparent via-[#ff5c00] to-transparent"
-        style={{ opacity: 0.05, willChange: "transform" }}
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(127,160,184,0.03) 2px, rgba(127,160,184,0.03) 4px)",
+          opacity: 0.6,
+          zIndex: 1,
+        }}
       />
+      {/* Ambient data sweep */}
+      <CrtSweep />
 
       {/* Terminal header bar */}
       <div className="relative border-b border-[#1b2438] px-4 py-3 flex items-center justify-between gap-3">
