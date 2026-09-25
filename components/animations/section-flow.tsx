@@ -26,11 +26,8 @@ export default function SectionFlow({ children }: { children: ReactNode }) {
     const b = panelBRef.current;
     if (!runA || !runB || !a || !b) return;
 
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
     const mq = window.matchMedia(QUERY);
-    let active = mq.matches && !reduced;
+    let active = mq.matches;
 
     const setHold = () => {
       const vh = window.innerHeight;
@@ -88,7 +85,7 @@ export default function SectionFlow({ children }: { children: ReactNode }) {
     };
 
     const sync = () => {
-      active = mq.matches && !reduced;
+      active = mq.matches;
       if (active) {
         setHold();
         onScroll();

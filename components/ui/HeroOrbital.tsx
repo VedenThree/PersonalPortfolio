@@ -2,14 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
+// Sistema di coordinate "di progetto": le misure sono qui, poi pct() le converte in %.
 const BOX = 460;
 const CENTER = BOX / 2;
-const SEED = 12323234;
+
+// Millisecondi per giro. Tutti gli elementi girano in senso antiorario.
 const SWEEP_PERIOD = 6000;
 const RING_OUTER_PERIOD = 18000;
 const RING_INNER_PERIOD = 11000;
 
-// Utility: converte un valore nel sistema di coordinate BOX in % del contenitore reale
+// Seed fisso: i target devono restare sempre sugli stessi pixel.
+const SEED = 12323234;
+
 const pct = (v: number) => `${((v / BOX) * 100).toFixed(4)}%`;
 
 type Target = {
@@ -20,6 +24,7 @@ type Target = {
   angle: number;
 };
 
+// PRNG deterministico: stesso seed, stessa sequenza.
 function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -31,9 +36,10 @@ function mulberry32(seed: number) {
   };
 }
 
+// Angolo sempre in [0, 360), per poter accumulare senza crescere all'infinito.
 const wrap360 = (deg: number) => ((deg % 360) + 360) % 360;
 
-// Target fissi: stessa posizione ad ogni render/visita (stesso seed).
+// I 6 target arancioni, generati una volta sola fuori dal render.
 const TARGETS: Target[] = (() => {
   const rng = mulberry32(SEED);
   return Array.from({ length: 6 }, () => {
@@ -42,6 +48,7 @@ const TARGETS: Target[] = (() => {
     const size = Math.round(3.5 + rng() * 2.5);
     const left = CENTER - size / 2 + r * Math.cos(a);
     const top = CENTER - size / 2 + r * Math.sin(a);
+    // Posizione del target in gradi, 0° in alto, senso orario.
     const cx = left + size / 2;
     const cy = top + size / 2;
     const angle = wrap360((Math.atan2(cy - CENTER, cx - CENTER) * 180) / Math.PI + 90);
@@ -57,12 +64,11 @@ export default function HeroOrbital() {
   const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const hitsRef = useRef<number[]>(TARGETS.map(() => 0));
 
+  // Loop a rAF: React disegna solo il primo frame, poi si scrive sul DOM direttamente.
   useEffect(() => {
     const sweep = sweepRef.current;
     const bearing = bearingRef.current;
     if (!sweep) return;
-
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let raf = 0;
     let last = performance.now();
@@ -70,12 +76,12 @@ export default function HeroOrbital() {
     let outerAngle = 0;
     let innerAngle = 0;
     let phase = 0;
-    let visible = true;
 
     const writeBearing = (deg: number) => {
       if (bearing) bearing.textContent = `${String(Math.round(wrap360(deg))).padStart(3, "0")}°`;
     };
 
+    // I due anelli ruotano con lo stesso orientamento iniziale, velocità diverse.
     const paintRings = () => {
       if (ringOuterRef.current) {
         ringOuterRef.current.style.transform = `rotate(${wrap360(outerAngle).toFixed(4)}deg)`;
@@ -85,28 +91,23 @@ export default function HeroOrbital() {
       }
     };
 
-    const paintStatic = () => {
-      writeBearing(angle);
-      sweep.style.transform = `rotate(${wrap360(angle).toFixed(2)}deg)`;
-      paintRings();
-    };
-
+    // Al rientro dalla tab in background, azzera il riferimento temporale.
     const onVisibility = () => {
-      visible = !document.hidden;
-      if (visible) last = performance.now();
+      if (!document.hidden) last = performance.now();
     };
     document.addEventListener("visibilitychange", onVisibility);
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
+
+      // Tempo trascorso, limitato a un frame per non avere salti.
       const dt = Math.min(64, now - last);
       last = now;
 
-      if (prefersReduced || !visible) {
-        paintStatic();
-        return;
-      }
+      // Rete di sicurezza: se il browser continua a chiamare il loop in background.
+      if (document.hidden) return;
 
+      // Avanza sul tempo trascorso, non sul numero di frame: velocità costante.
       angle = wrap360(angle - (dt * 360) / SWEEP_PERIOD);
       outerAngle = wrap360(outerAngle - (dt * 360) / RING_OUTER_PERIOD);
       innerAngle = wrap360(innerAngle - (dt * 360) / RING_INNER_PERIOD);
@@ -116,12 +117,14 @@ export default function HeroOrbital() {
       paintRings();
       writeBearing(190 + 150 * Math.sin(phase * 0.9));
 
+      // Entro 12° dal fascio il target è illuminato: memorizzo l'impatto.
       dotRefs.current.forEach((dot, i) => {
         if (!dot) return;
         const t = TARGETS[i];
         const ahead = wrap360(t.angle - angle);
         if (ahead < 12) hitsRef.current[i] = now;
 
+        // onBeam = luce del fascio, tail = eco che sfuma in 520ms.
         const tail = Math.max(0, 1 - (now - hitsRef.current[i]) / 520);
         const onBeam = Math.max(0, 1 - ahead / 12);
         const hit = Math.min(1, onBeam * onBeam * 0.55 + tail * 0.45);
@@ -135,11 +138,7 @@ export default function HeroOrbital() {
       });
     };
 
-    if (prefersReduced) {
-      paintStatic();
-    } else {
-      raf = requestAnimationFrame(frame);
-    }
+    raf = requestAnimationFrame(frame);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);

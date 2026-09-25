@@ -89,13 +89,6 @@ export default function Projects() {
     const h = terminalRef.current;
     if (!runway || !h) return;
 
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    const show = (el: HTMLElement | null) => {
-      if (el) el.style.opacity = "1";
-    };
-
     const mq = window.matchMedia("(min-width: 768px)");
     let pinned = false;
     const setPinned = (v: boolean) => {
@@ -160,7 +153,7 @@ export default function Projects() {
     };
 
     const onPlayProjects = () => {
-      if (reduced || !pinned || !observer) {
+      if (!pinned || !observer) {
         document
           .getElementById("lavori")
           ?.scrollIntoView({ behavior: "smooth" });
@@ -181,30 +174,6 @@ export default function Projects() {
       stopTour();
       runway.style.height = "auto";
     };
-
-    if (reduced) {
-      show(h.box());
-      h.prompts().forEach(show);
-      h.chars().forEach((row) => row.forEach(show));
-      h.res().forEach(show);
-      show(h.cursor());
-      show(gridRef.current);
-      cardRefs.current.forEach((c) => {
-        if (c) {
-          c.style.opacity = "1";
-          c.style.transform = "none";
-        }
-      });
-      show(footerRef.current);
-      if (gridRef.current) gridRef.current.style.pointerEvents = "auto";
-      const statusEl = h.status();
-      if (statusEl) {
-        statusEl.textContent = "DEPLOYED";
-        statusEl.style.color = "#10b981";
-      }
-      if (syncRef.current) syncRef.current.textContent = "SYNC_100%";
-      return removeNavEvents;
-    }
 
     const box = h.box();
     if (!box) {
