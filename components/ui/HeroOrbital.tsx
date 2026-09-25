@@ -147,7 +147,7 @@ export default function HeroOrbital() {
   }, []);
 
   return (
-    <div className="bg-[#0b101d5d] relative rounded-[8px] w-full max-w-[520px] aspect-square overflow-clip">
+    <div className="bg-[#0b101d5d] relative rounded-[8px] w-full max-w-130 aspect-square overflow-clip">
       {/* Griglia di sfondo */}
       <div className="absolute inset-0 flex flex-col justify-between p-5 pointer-events-none opacity-30">
         {Array.from({ length: 10 }).map((_, i) => (
