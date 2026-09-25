@@ -2,7 +2,7 @@ import HeroOrbital from "../ui/HeroOrbital";
 
 export default function Hero() {
   return (
-    <section className="relative grid grid-cols-1 md:grid-cols-[1.25fr_0.9fr] items-start gap-14 py-24 pb-[100px]">
+    <section id="hero" className="relative grid grid-cols-1 md:grid-cols-[1.25fr_0.9fr] items-start gap-14 py-24 pb-[100px]">
       <div>
         <div className="flex flex-wrap gap-7 mb-[38px] font-mono text-[12px] text-ice-dim">
           <span className="flex items-center gap-2 before:content-[''] before:w-[5px] before:h-[5px] before:rounded-full before:bg-ice-dim first:before:bg-orange">

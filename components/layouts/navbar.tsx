@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
+  { num: "00", label: "Home", id: "hero" },
   { num: "01", label: "Progetti", id: "lavori" },
   { num: "02", label: "Profilo", id: "profilo" },
   { num: "03", label: "Contatti", id: "contatti" },
