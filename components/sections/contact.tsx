@@ -40,6 +40,7 @@ const FIELDS = [
     placeholder: "Alex Rossi",
     type: "text",
     autoComplete: "name",
+    multiline: false,
   },
   {
     label: "CANALE_EMAIL",
@@ -47,6 +48,13 @@ const FIELDS = [
     placeholder: "alex@example.com",
     type: "email",
     autoComplete: "email",
+    multiline: false,
+  },
+  {
+    label: "MESSAGGIO",
+    name: "messaggio",
+    placeholder: "Descrivi il progetto o la collaborazione...",
+    multiline: true,
   },
 ] as const;
 
@@ -109,9 +117,12 @@ export default function Contact() {
             <div className="relative border-b border-panel-line px-4 py-2.5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="flex gap-1.5 shrink-0">
-                  <span className="size-[9px] rounded-full bg-orange" />
-                  <span className="size-[9px] rounded-full bg-steel" />
-                  <span className="size-[9px] rounded-full bg-steel" />
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className={`size-[9px] rounded-full ${i === 0 ? "bg-orange" : "bg-steel"}`}
+                    />
+                  ))}
                 </div>
                 <p className="font-mono text-[10px] text-ink-title tracking-[0.14em] whitespace-nowrap overflow-hidden">
                   SYS // CONTATTI
@@ -142,73 +153,60 @@ export default function Contact() {
 
         {/* Colonna destra: console di trasmissione */}
         <div className="border border-panel-line-strong rounded p-6 md:p-8 bg-surface/60 relative">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -top-[1px] -left-[1px] font-mono text-[14px] leading-none text-ink-faint"
-          >
-            ┌
-          </span>
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -top-[1px] -right-[1px] font-mono text-[14px] leading-none text-ink-faint"
-          >
-            ┐
-          </span>
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -bottom-[1px] -left-[1px] font-mono text-[14px] leading-none text-ink-faint"
-          >
-            └
-          </span>
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -bottom-[1px] -right-[1px] font-mono text-[14px] leading-none text-ink-faint"
-          >
-            ┘
-          </span>
+          {(
+            [
+              { glyph: "┌", pos: "-top-[1px] -left-[1px]" },
+              { glyph: "┐", pos: "-top-[1px] -right-[1px]" },
+              { glyph: "└", pos: "-bottom-[1px] -left-[1px]" },
+              { glyph: "┘", pos: "-bottom-[1px] -right-[1px]" },
+            ] as const
+          ).map(({ glyph, pos }) => (
+            <span
+              key={glyph}
+              aria-hidden
+              className={`pointer-events-none absolute font-mono text-[14px] leading-none text-ink-faint ${pos}`}
+            >
+              {glyph}
+            </span>
+          ))}
 
           <p className="font-mono text-[10px] text-orange tracking-[2.22px] uppercase mb-5">
             {"// TRASMETTI MESSAGGIO"}
           </p>
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-            {FIELDS.map(({ label, name, placeholder, type, autoComplete }) => (
-              <div key={name}>
+            {FIELDS.map((f) => (
+              <div key={f.name}>
                 <label
-                  htmlFor={name}
+                  htmlFor={f.name}
                   className="font-mono text-[9.6px] text-ink-mid tracking-[1.34px] uppercase mb-1.5 block"
                 >
-                  [{label}]
+                  [{f.label}]
                 </label>
-                <Input
-                  id={name}
-                  name={name}
-                  type={type}
-                  autoComplete={autoComplete}
-                  placeholder={placeholder}
-                  required
-                  maxLength={120}
-                  className="bg-field border-panel-line py-2.5 text-[14px] placeholder:text-ice/25 focus:border-orange/60"
-                />
+                {f.multiline ? (
+                  <Textarea
+                    id={f.name}
+                    name={f.name}
+                    placeholder={f.placeholder}
+                    required
+                    minLength={10}
+                    maxLength={4000}
+                    rows={5}
+                    className="bg-field border-panel-line py-2.5 text-[14px] placeholder:text-ice/25 focus:border-orange/60"
+                  />
+                ) : (
+                  <Input
+                    id={f.name}
+                    name={f.name}
+                    type={f.type}
+                    autoComplete={f.autoComplete}
+                    placeholder={f.placeholder}
+                    required
+                    maxLength={120}
+                    className="bg-field border-panel-line py-2.5 text-[14px] placeholder:text-ice/25 focus:border-orange/60"
+                  />
+                )}
               </div>
             ))}
-            <div>
-              <label
-                htmlFor="messaggio"
-                className="font-mono text-[9.6px] text-ink-mid tracking-[1.34px] uppercase mb-1.5 block"
-              >
-                [MESSAGGIO]
-              </label>
-              <Textarea
-                id="messaggio"
-                name="messaggio"
-                placeholder="Descrivi il progetto o la collaborazione..."
-                required
-                minLength={10}
-                maxLength={4000}
-                rows={5}
-                className="bg-field border-panel-line py-2.5 text-[14px] placeholder:text-ice/25 focus:border-orange/60"
-              />
-            </div>
             <div className="flex items-center gap-4">
               <Button type="submit">
                 Trasmetti{" "}

@@ -47,7 +47,24 @@ const LINES: TerminalLine[] = [
   { id: "ready", ready: true, cmd: "PROJECTS // ONLINE" },
 ];
 
+const CORNERS = [
+  { glyph: "┌", pos: "-top-[1px] -left-[1px]" },
+  { glyph: "┐", pos: "-top-[1px] -right-[1px]" },
+  { glyph: "└", pos: "-bottom-[1px] -left-[1px]" },
+  { glyph: "┘", pos: "-bottom-[1px] -right-[1px]" },
+] as const;
+
 const notNull = <T,>(x: T | null): x is T => x !== null;
+
+function PromptHead({ label }: { label: string }) {
+  return (
+    <>
+      <span className="text-ink-dim">$</span>{" "}
+      <span className="text-ink-mid">{label}</span>{" "}
+      <span className="text-orange">&gt;</span>{" "}
+    </>
+  );
+}
 
 function ASCIIProgressBar({ p }: { p: Project }) {
   const meta = STATUS_META[p.status];
@@ -56,9 +73,7 @@ function ASCIIProgressBar({ p }: { p: Project }) {
   );
   return (
     <p className="m-0 text-[13px] leading-[1.7]">
-      <span className="text-ink-dim">$</span>{" "}
-      <span className="text-ink-mid">PROG</span>{" "}
-      <span className="text-orange">&gt;</span>{" "}
+      <PromptHead label="PROG" />
       <span className="text-ink-dim">[</span>
       {cells.map((c, i) => (
         <span
@@ -425,50 +440,20 @@ export default function Projects() {
                     }}
                   >
                     {/* ASCII corner glyphs */}
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "pointer-events-none absolute -top-[1px] -left-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
-                        selected === p.id
-                          ? "text-orange"
-                          : "text-ink-faint group-hover:text-orange/70",
-                      )}
-                    >
-                      ┌
-                    </span>
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "pointer-events-none absolute -top-[1px] -right-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
-                        selected === p.id
-                          ? "text-orange"
-                          : "text-ink-faint group-hover:text-orange/70",
-                      )}
-                    >
-                      ┐
-                    </span>
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "pointer-events-none absolute -bottom-[1px] -left-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
-                        selected === p.id
-                          ? "text-orange"
-                          : "text-ink-faint group-hover:text-orange/70",
-                      )}
-                    >
-                      └
-                    </span>
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "pointer-events-none absolute -bottom-[1px] -right-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
-                        selected === p.id
-                          ? "text-orange"
-                          : "text-ink-faint group-hover:text-orange/70",
-                      )}
-                    >
-                      ┘
-                    </span>
+                    {CORNERS.map(({ glyph, pos }) => (
+                      <span
+                        key={glyph}
+                        aria-hidden
+                        className={cn(
+                          `pointer-events-none absolute font-mono text-[14px] leading-none transition-colors duration-300 ${pos}`,
+                          selected === p.id
+                            ? "text-orange"
+                            : "text-ink-faint group-hover:text-orange/70",
+                        )}
+                      >
+                        {glyph}
+                      </span>
+                    ))}
 
                     {/* Header row */}
                     <div className="flex items-baseline gap-2 border-b border-panel-rule pb-3 mb-3">
@@ -494,17 +479,13 @@ export default function Projects() {
                     {/* Body rows */}
                     <div className="flex flex-1 flex-col gap-2">
                       <p className="m-0 text-[13px] leading-[1.7]">
-                        <span className="text-ink-dim">$</span>{" "}
-                        <span className="text-ink-mid">DESC</span>{" "}
-                        <span className="text-orange">&gt;</span>{" "}
+                        <PromptHead label="DESC" />
                         <span className="text-ink-value">
                           {p.desc || "[ ---- DATI_IN_CODA ---- ]"}
                         </span>
                       </p>
                       <p className="m-0 text-[13px] leading-[1.7]">
-                        <span className="text-ink-dim">$</span>{" "}
-                        <span className="text-ink-mid">TAGS</span>{" "}
-                        <span className="text-orange">&gt;</span>{" "}
+                        <PromptHead label="TAGS" />
                         {p.tags.length > 0 ? (
                           p.tags.map((t) => (
                             <span key={t} className="text-ink-tag">

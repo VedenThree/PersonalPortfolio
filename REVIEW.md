@@ -4,22 +4,28 @@
 
 Stato di partenza verificato sui file: `output: "export"` + `trailingSlash: true` già presenti (`next.config.ts:4-9`); animazioni anime.js già funzionanti in `components/sections/projects.tsx` (timeline + `onScroll`) e `components/ui/CrtSweep.tsx` (`animate` loop) — **non toccare**.
 
+## Stato task 1 — A+D (completato)
+
+Eseguito il punto 1 (A+D veloci). Verifiche: `npm run typecheck` ✓, `npm run lint` ✓, `npm run build` ✓, `npm test` ✓ (16 pass).
+Scelte confermate prima di eseguire: rimosso `lucide-react`; tenuti `cva`, `tw-animate-css`, `RESERVED`/`isPublishable`/test, token `ink-*`/`panel*` invariati; dai file extra rimossi solo gli SVG morti in `public/`.
+Dettaglio per voce nelle checkbox sotto (`[x]` = fatto in questo task, `[-]` = saltato su tua indicazione).
+
 ---
 
 ## 1. Codice inutile / ridondante (HTML + TS al minimo)
 
 Principio: se 3 nodi hanno stesso stile, è 1 array + 1 `.map`, non 3 span copiati.
 
-- [ ] **A1. `components/layouts/hero.tsx:8-18` — 3 span identici.** `FRONTEND/BACKEND/FULLSTACK` differiscono solo per il testo (il `first:before:bg-orange` tra l'altro non funziona su 3 span fratelli separati). → `const TAGS = [...]` + map. Stesso per i 2 `NavLink` `:32-46` che duplicano `clip-path` + padding + font: usare `buttonVariants({variant:"primary"|"secondary"})` da `components/ui/button.tsx` invece di ricopiare le classi.
-- [ ] **A2. Angoli ASCII `┌┐└┘` duplicati ×2.** `components/sections/projects.tsx:428-471` (4 span con stesso `cn`) e `components/sections/contact.tsx:145-168` (altri 4 span). → un `ProjectCorners({selected})` o map su `[["┌","-top..."],...]`. Risparmio: ~40 righe → ~10.
-- [ ] **A3. Righe console `$ LABEL > valore`.** `projects.tsx:496-518` (`DESC`, `TAGS`), `ASCIIProgressBar:52-77` (`PROG`), `contact.tsx:125-135` (`DETAILS`). Stesso pattern `$ / label / > / valore / [res]`. → un `ConsoleRow({prompt,value,res,color})` condiviso in `components/ui/`.
-- [ ] **A4. Pallini header terminale ×2.** `Terminal.tsx:104-108` e `contact.tsx:111-115` (3 `span` tondi). → `Dots()` condiviso.
-- [ ] **A5. `components/layouts/footer.tsx:20-46` — 3 `NavLink` identici.** Solo `section`/`label` cambiano. → map su array.
-- [ ] **A6. `components/layouts/navbar.tsx` — doppia sidebar.** `MobileRail:56-108` e sidebar desktop `:121-220` duplicano logo `FD`, dot `ONLINE`, loop `NAV_ITEMS`. → estrarre `BrandMark`, `StatusDot`, unica `NAV_ITEMS` già esistente. Sotto-task: signal bars `:140-147` (`[1,2,3].map` + 1 div statico) → loop unico da 4.
-- [ ] **A7. `components/layouts/bg-scene.tsx:5-21` — `STARS`/`MOTES` gemelli.** Due `Array.from` con stessa forma (`left/size/duration/delay`). → una `factory(n, fn)` o un solo array con `kind`. Anche il render `:47-74` dei due `.map` è identico → un componente `Particle`.
-- [ ] **A8. `app/globals.css:15-87` — inflazione token.** 8 `ink-*`, 8 `panel*`, doppioni `bg`/`ink`/`bg-deep`/`ink-deep`, `paper-bright`/`paper-cool` quasi identici. → target: max ~4 ink + 3 panel + 1 paper. Ogni token rimosso va sostituito con il più vicino (nessun cambio pixel, solo alias). La regola lint `no-restricted-syntax` in `eslint.config.mjs:23-47` resta: garantisce che non rientrino hex.
-- [ ] **A9. `lib/projects-data.ts:75-98` — `RESERVED` placeholder.** Due oggetti vuoti servono solo a tenere il denominatore `LOAD_MODULES [2/4]` (`projects.tsx:28`). → sostituire con `const TOTAL_SLOTS = 4` e cancellare ~25 righe + la guardia `isPublishable:110-124` (non serve se non esistono placeholder pubblicabili).
-- [ ] **A10. `components/sections/contact.tsx:36-51` — `FIELDS` + blocco messaggio separato `:194-211`.** I 3 campi differiscono solo per `label/name/rows`. → un solo array con `multiline?: boolean` e un `Field` unico.
+- [x] **A1. `components/layouts/hero.tsx` — 3 span identici → map su `TAGS`.** (Nota: il `first:before:bg-orange` funzionava già — è `:first-child` del div — quindi è stato conservato identico nel map.) I 2 `NavLink` restano come sono su tua indicazione (niente `buttonVariants`).
+- [x] **A2. Angoli ASCII `┌┐└┘` → map su `CORNERS`** in `projects.tsx` e inline-map in `contact.tsx`. ~40 righe → ~10, stesso output.
+- [x] **A3 (parziale, senza nuovo file). Righe console `$ LABEL >`** in `projects.tsx` → helper locale `PromptHead({label})` usato da `DESC`, `TAGS`, `PROG`. Niente `ConsoleRow` condiviso in `components/ui/` (avrebbe aggiunto un file per 3 righe).
+- [x] **A4. Pallini header → map su `[0,1,2]`** in `Terminal.tsx` e `contact.tsx` (primo `bg-orange`, resto `bg-steel`).
+- [x] **A5. `footer.tsx` — 3 `NavLink` → map su `LINKS`.**
+- [x] **A6. `navbar.tsx` signal bars → map unica da 4** (`[8,10,12,12]`, ultima dimmerata). Resto della doppia sidebar invariato.
+- [x] **A7. `bg-scene.tsx` — `STARS`/`MOTES` → factory `makeParticles(kind,n,fn)`.** Render invariato.
+- [-] **A8. Token `ink-*`/`panel*` — SALTATO su tua indicazione.** Palette invariata.
+- [-] **A9. `RESERVED`/`isPublishable` — SALTATO su tua indicazione.** `LOAD_MODULES [2/4]` e test invariati.
+- [x] **A10. `contact.tsx` — `FIELDS` unificato** (i 2 `Input` + `Textarea` messaggio ora in un solo array con `multiline` e un solo render con ternario).
 
 ## 2. Semplificare la logica (niente "grande matematica")
 
@@ -46,16 +52,14 @@ Intoccabili: timeline + `onScroll` in `projects.tsx:152-340`, loop `animate` in 
 
 ## 4. Pulizia dipendenze e file inutili
 
-- [ ] **D1. `lucide-react` (`package.json:18`) — usato 1 sola volta** (`navbar.tsx:4` per `ChevronRight`). → sostituire con `›` testuale o SVG inline da 3 righe e rimuovere la dipendenza (~centinaia di KB risparmiati nel bundle dev).
-- [ ] **D2. `class-variance-authority` (`package.json:15`) — usato 1 solo file** (`button.tsx:8`). → inline: `constcls = variant==="secondary" ? ... : ...`. Rimuove una dipendenza per ~10 righe di ternario.
-- [ ] **D3. `tw-animate-css` (`package.json:22` + `@import` in `globals.css:2`).** Verificare con grep cosa usa davvero (`animate-*` del progetto sono custom in `@theme inline`, non di tw-animate). Se inutilizzato → rimuovere import + dipendenza + `@import "tw-animate-css"`.
-- [ ] **D4. `clsx` + `tailwind-merge` restano** (`lib/utils.ts:1-6`): `cn()` è usato ovunque, tenerli.
-- [ ] **D5. `shadcn` in `devDependencies` + `components.json`.** Serve solo se si aggiungeranno altri primitivi; `Button/Input/Textarea` sono già vendorizzati. → o si rimuove dal `package.json` (i 3 file restano) o si dichiara "tengo per futuri componenti". Decisione esplicita, non dimenticanza.
-- [ ] **D6. `serve` (`package.json:31`, `npm start`).** Per GitHub Pages non serve alcun server statico locale oltre a `npx serve` occasionale. → spostare in documentazione o rimuovere; il build GH Pages usa solo `npm run build` → `out/`.
-- [ ] **D7. Test `lib/*.test.ts` + `tsconfig.test.json` + `npm test`.** Sono `node:test` zero-dipendenze e coprono `orbital-targets`/`projects-data` — i due file che il piano propone di cancellare/semplificare (A9, B1). → dopo B1/A9 i test corrispondenti vanno rimossi; tenere l'infrastruttura solo se restano invarianti da bloccare.
-- [ ] **D8. File/cartelle da non pubblicare (non toccano `out/`, ma sporcano il repo).** `DESIGN.md`, `PRODUCT.md`, `CLAUDE.md`, `.impeccable/`, `.agents/`, `.opencode/`, `opencode.json`, `skills-lock.json`, `REVIEW.md` (vuoto, questo piano lo sostituisce), `.next/`, `out/`. → aggiungere a `.gitignore` (`out/`, `.next/` — verificare) e valutare spostamento doc in `docs/` o cancellazione. **Questo file va in `review.md` (minuscolo) come richiesto; decidere se cancellare `REVIEW.md` (maiuscolo, vuoto) o tenerlo come alias.**
-- [ ] **D9. `public/` + `app/favicon.ico`.** Inventariare: se ci sono font/immagini non referenziati, cancellarli. Ogni KB in `public/` finisce su GH Pages.
-- [ ] **D10. `components.json` + `next-env.d.ts`.** Tenerli (config shadcn / tipi Next), non sono peso.
+- [x] **D1. `lucide-react` — RIMOSSO.** `ChevronRight` in `navbar.tsx` → SVG inline (`path m9 18 6-6-6-6`), `npm install` eseguito (`npm ls lucide-react` → vuoto), lock aggiornato.
+- [-] **D2. `class-variance-authority` — TENUTO su tua indicazione.** `button.tsx` invariato.
+- [-] **D3. `tw-animate-css` — TENUTO su tua indicazione.** Import in `globals.css` invariato.
+- [x] **D4. `clsx` + `tailwind-merge` restano** — confermato, `cn()` usato ovunque.
+- [-] **D5/D6/D7. `shadcn`, `serve`, test — INVARIATI su tua indicazione.**
+- [-] **D8. Doc root/`.gitignore` — INVARIATO** (`out/`, `.next/` già ignorati). Nota: su Windows `review.md`/`REVIEW.md` sono lo stesso file — il piano vive qui.
+- [x] **D9 (parziale). `public/` — rimossi i 5 SVG morti del template** (`file/globe/next/vercel/window.svg`, zero riferimenti nel codice). `public/images/` tenuto (origine tooling non chiara, da decidere in un task dedicato).
+- [x] **D10. `components.json` + `next-env.d.ts`** — tenuti, nessuna azione.
 
 ## 5. Statico per GitHub Pages (niente dinamico)
 
@@ -89,7 +93,7 @@ Colli di bottiglia osservati (senza misurazioni: da verificare con Lighthouse pr
 
 ## Ordine di esecuzione consigliato (stima)
 
-1. **A + D veloci** (map/loop, `lucide`→SVG, `cva`→ternario, `RESERVED`→costante) — zero rischio visivo, `build` verde subito.
+1. **A + D veloci** — ✅ COMPLETATO in questo task (vedi Stato task 1 sopra).
 2. **B logiche** (costanti orbitali, collapse `section-nav`, helper `writeIfChanged`) — prepara C.
 3. **C anime.js** nell'ordine C1→C5, un keyframe CSS cancellato alla volta.
 4. **E statico** (`basePath`, `.nojekyll`, metadata minima, audit `"use client"`).

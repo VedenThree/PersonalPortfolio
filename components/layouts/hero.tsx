@@ -1,20 +1,21 @@
 import NavLink from "@/components/ui/nav-link";
 import HeroOrbital from "@/components/ui/HeroOrbital";
 
+const TAGS = ["FRONTEND", "BACKEND", "FULLSTACK"] as const;
+
 export default function Hero() {
   return (
     <section id="hero" className="relative grid grid-cols-1 md:grid-cols-[1.25fr_0.9fr] items-start gap-14 py-24 pb-[100px]">
       <div>
         <div className="flex flex-wrap gap-7 mb-[38px] font-mono text-[12px] text-ice-dim">
-          <span className="flex items-center gap-2 before:content-[''] before:w-[5px] before:h-[5px] before:rounded-full before:bg-ice-dim first:before:bg-orange">
-            FRONTEND
-          </span>
-          <span className="flex items-center gap-2 before:content-[''] before:w-[5px] before:h-[5px] before:rounded-full before:bg-ice-dim first:before:bg-orange">
-            BACKEND
-          </span>
-          <span className="flex items-center gap-2 before:content-[''] before:w-[5px] before:h-[5px] before:rounded-full before:bg-ice-dim first:before:bg-orange">
-            FULLSTACK
-          </span>
+          {TAGS.map((tag) => (
+            <span
+              key={tag}
+              className="flex items-center gap-2 before:content-[''] before:w-[5px] before:h-[5px] before:rounded-full before:bg-ice-dim first:before:bg-orange"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
 
         <h1 className="font-display font-bold text-[clamp(36px,4.6vw,66px)] leading-[1.04] tracking-[-0.01em] text-paper">

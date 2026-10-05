@@ -2,8 +2,23 @@
 
 import { useEffect } from "react";
 
-const STARS = Array.from({ length: 70 }, (_, i) => ({
-  id: i,
+type Particle = {
+  id: string;
+  top?: number;
+  left: number;
+  bottom?: number;
+  size: number;
+  duration: number;
+  delay: number;
+};
+
+const makeParticles = (
+  kind: string,
+  n: number,
+  fn: (i: number) => Omit<Particle, "id">,
+): Particle[] => Array.from({ length: n }, (_, i) => ({ ...fn(i), id: `${kind}-${i}` }));
+
+const STARS = makeParticles("star", 70, (i) => ({
   top: (i * 37) % 100,
   left: (i * 53) % 100,
   size: 1 + ((i * 7) % 10) / 5,
@@ -11,8 +26,7 @@ const STARS = Array.from({ length: 70 }, (_, i) => ({
   delay: ((i * 11) % 50) / 10,
 }));
 
-const MOTES = Array.from({ length: 18 }, (_, i) => ({
-  id: i,
+const MOTES = makeParticles("mote", 18, (i) => ({
   left: (i * 41) % 100,
   bottom: 5 + ((i * 13) % 90),
   size: 1 + ((i * 5) % 8) / 4,

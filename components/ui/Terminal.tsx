@@ -102,9 +102,12 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
       <div className="relative border-b border-panel-line px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex gap-1.5 shrink-0">
-            <span className="size-2.5 rounded-full bg-orange" />
-            <span className="size-2.5 rounded-full bg-steel" />
-            <span className="size-2.5 rounded-full bg-steel" />
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className={`size-2.5 rounded-full ${i === 0 ? "bg-orange" : "bg-steel"}`}
+              />
+            ))}
           </div>
           <p className="font-mono text-[11px] text-ink-title ml-2 whitespace-nowrap overflow-hidden tracking-[0.14em]">
             {title}

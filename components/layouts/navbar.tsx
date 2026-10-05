@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { ChevronRight } from "lucide-react";
 import { goToSection } from "@/lib/section-nav";
 
 const NAV_ITEMS = [
@@ -137,14 +136,13 @@ export default function NavBar() {
           </div>
           <div className="flex items-center justify-between border-t border-ice/10 pt-3">
             <div className="flex items-end gap-0.5">
-              {[1, 2, 3].map((i) => (
+              {[8, 10, 12, 12].map((h, i) => (
                 <div
                   key={i}
-                  className="w-[3px] bg-orange"
-                  style={{ height: `${6 + i * 2}px` }}
+                  className={`w-[3px] ${i < 3 ? "bg-orange" : "bg-orange/10"}`}
+                  style={{ height: h }}
                 />
               ))}
-              <div className="w-[3px] bg-orange/10" style={{ height: 12 }} />
             </div>
             <span className="font-mono text-[7.5px] tracking-[0.7px] text-ice-dim/70">
               SIGNAL 3/4
@@ -190,12 +188,18 @@ export default function NavBar() {
                     {label}
                   </span>
                 </span>
-                <ChevronRight
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
                   className={`ml-auto size-3.5 shrink-0 transition-colors ${
                     isActive ? "text-orange" : "text-transparent"
                   }`}
-                  strokeWidth={2}
-                />
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
               </button>
             );
           })}

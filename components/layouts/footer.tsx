@@ -1,6 +1,12 @@
 import Reveal from "@/components/animations/reveal";
 import NavLink from "@/components/ui/nav-link";
 
+const LINKS = [
+  { section: "lavori", label: "Progetti" },
+  { section: "profilo", label: "Profilo" },
+  { section: "contatti", label: "Contatti" },
+] as const;
+
 export default function Footer() {
   return (
     <Reveal delay={300}>
@@ -18,30 +24,16 @@ export default function Footer() {
           </p>
           <nav aria-label="Collegamenti di piede">
           <ul className="flex gap-6 list-none">
-            <li>
-              <NavLink
-                section="lavori"
-                className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
-              >
-                Progetti
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                section="profilo"
-                className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
-              >
-                Profilo
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                section="contatti"
-                className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
-              >
-                Contatti
-              </NavLink>
-            </li>
+            {LINKS.map(({ section, label }) => (
+              <li key={section}>
+                <NavLink
+                  section={section}
+                  className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
+                >
+                  {label}
+                </NavLink>
+              </li>
+            ))}
           </ul>
         </nav>
         </div>
