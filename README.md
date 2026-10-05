@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio — FD / 01
 
-## Getting Started
+Portfolio di uno sviluppatore web full stack. Interfaccia single-page costruita
+con Next.js in App Router, animata con AnimeJS e CSS, esportata come sito
+statico.
 
-First, run the development server:
+## Stack
+
+| Ambito | Scelta |
+|---|---|
+| Framework | Next.js 16.3.5 (App Router), React 19.2.8 |
+| Linguaggio | TypeScript |
+| Styling | Tailwind CSS v4 (nessun `tailwind.config.js`: i token stanno in `app/globals.css`) |
+| Animazione | AnimeJS v4 per le timeline, rAF loop per il radar dell'hero |
+| Icone | lucide-react |
+| Font | Archivo, IBM Plex Sans, IBM Plex Mono, JetBrains Mono (via `next/font`) |
+
+## Comandi
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # dev server su http://localhost:3000
+npm run build      # build di produzione → export statico in out/
+npm run start      # serve out/ con `serve` (vedi "Deploy" sotto)
+npm run lint       # ESLint
+npm run typecheck  # tsc --noEmit
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Non esiste un test runner: la verifica è build + typecheck + lint.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Export statico
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`next.config.ts` imposta `output: "export"`, quindi `next build` produce una
+cartella `out/` di file statici. **Non c'è un server Node**: `next start` non
+funziona e non può funzionare.
 
-## Learn More
+Per servire la build in locale:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run start      # equivalente a: serve out
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Ogni file statico va pubblicato com'è (GitHub Pages, Netlify, Vercel come
+static output, S3, nginx…). Nessuna funzione server, nessuna API route.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Il form di contatti non fa POST: valida l'input e apre il client di posta con
+il messaggio già composto, perché un export statico non ha dove inviare.
 
-## Deploy on Vercel
+## Struttura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/
+  layout.tsx       # font, metadata, BgScene + NavBar, wrapper di contenuto
+  page.tsx         # Hero · Projects · SectionFlow(Profile, Contact) · Footer
+  globals.css      # token di design, @theme, keyframe, utilities
+components/
+  layouts/         # navbar, hero, footer, bg-scene
+  sections/        # projects, profile, contact
+  animations/      # reveal (IntersectionObserver), section-flow (sticky a due pannelli)
+  ui/              # button, input, textarea (primitivi), Terminal, HeroOrbital, CrtSweep, nav-link
+lib/
+  utils.ts         # cn() = clsx + tailwind-merge
+  projects-data.ts # unica fonte dei progetti (VISIBLE_PROJECTS per il rendering)
+  section-nav.ts   # navigazione unificata alle sezioni
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Documentazione
+
+- `AGENTS.md` — convenzioni per chi modifica il codice
+- `DESIGN.md` — design system: token, tipografia, componenti, regole
+- `PRODUCT.md` — posizionamento e contenuto
+- `REVIEW.md` — code review con lo stato dei problemi noti
+
+## Note
+
+- Nessun tema chiaro: il design è pensato per uno sfondo scuro fisso.
+- `npm start` usa `serve`, che è in `devDependencies` perché serve solo in locale.

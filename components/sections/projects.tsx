@@ -6,29 +6,44 @@ import Terminal, {
   type TerminalHandle,
   type TerminalLine,
 } from "@/components/ui/Terminal";
-import { PROJECTS, STATUS_META, type Project } from "@/lib/projects-data";
+import {
+  PROJECTS,
+  STATUS_META,
+  VISIBLE_PROJECTS,
+  moduleName,
+  projectNum,
+  type Project,
+} from "@/lib/projects-data";
+import { createProjectsTour } from "@/lib/projects-tour";
+import { SECTION_EVENTS, onSectionEvent } from "@/lib/section-nav";
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
 const HOLD_START = 0.65;
 
 const LINES: TerminalLine[] = [
-  { id: "init", cmd: "INIT DEPLOY_PIPELINE", res: "OK", color: "#10b981" },
+  { id: "init", cmd: "INIT DEPLOY_PIPELINE", res: "OK", color: "var(--green)" },
   {
     id: "modules",
-    cmd: `LOAD_MODULES [${PROJECTS.length}/${PROJECTS.length}]`,
+    cmd: `LOAD_MODULES [${VISIBLE_PROJECTS.length}/${PROJECTS.length}]`,
     res: "COMPLETE",
-    color: "#10b981",
+    color: "var(--green)",
   },
-  ...PROJECTS.map((p) => ({
+  ...VISIBLE_PROJECTS.map((p) => ({
     id: `module-${p.id}`,
     module: true,
-    cmd: p.title.toUpperCase().replace(/\s+/g, "_"),
+    cmd: moduleName(p.title),
     res: p.status,
     color: STATUS_META[p.status].hex,
   })),
-  { id: "net", cmd: "NET_STATUS", res: "ONLINE", color: "#10b981" },
-  { id: "clearance", cmd: "CLEARANCE_LVL", res: "VERIFIED", color: "#10b981" },
-  { id: "render", cmd: "RENDER_MODE", res: "ASCII", color: "#ff5c00" },
+  { id: "net", cmd: "NET_STATUS", res: "ONLINE", color: "var(--green)" },
+  {
+    id: "clearance",
+    cmd: "CLEARANCE_LVL",
+    res: "VERIFIED",
+    color: "var(--green)",
+  },
+  { id: "render", cmd: "RENDER_MODE", res: "ASCII", color: "var(--orange)" },
   { id: "ready", ready: true, cmd: "PROJECTS // ONLINE" },
 ];
 
@@ -41,21 +56,21 @@ function ASCIIProgressBar({ p }: { p: Project }) {
   );
   return (
     <p className="m-0 text-[13px] leading-[1.7]">
-      <span className="text-[#7a8ca1]">$</span>{" "}
-      <span className="text-[#93a6b8]">PROG</span>{" "}
-      <span className="text-[#ff5c00]">&gt;</span>{" "}
-      <span className="text-[#7a8ca1]">[</span>
+      <span className="text-ink-dim">$</span>{" "}
+      <span className="text-ink-mid">PROG</span>{" "}
+      <span className="text-orange">&gt;</span>{" "}
+      <span className="text-ink-dim">[</span>
       {cells.map((c, i) => (
         <span
           key={i}
           style={{
-            color: c === "█" ? meta.hex : "#2a3a4d",
+            color: c === "█" ? meta.hex : "var(--panel-cell)",
           }}
         >
           {c}
         </span>
       ))}
-      <span className="text-[#7a8ca1]">]</span>{" "}
+      <span className="text-ink-dim">]</span>{" "}
       <span style={{ color: meta.hex }}>{p.completion}%</span>
     </p>
   );
@@ -71,6 +86,7 @@ export default function Projects() {
   const footerRef = useRef<HTMLDivElement | null>(null);
 
   const [selected, setSelected] = useState<string | null>(null);
+  const reduced = usePrefersReducedMotion();
 
   const handleSelect = (p: Project) => {
     const nowSelected = selected !== p.id;
@@ -78,13 +94,16 @@ export default function Projects() {
     if (echoRef.current) {
       echoRef.current.textContent = `$ ${
         nowSelected ? "open" : "close"
-      } ${p.missionId.toLowerCase()} // ${p.title
-        .toUpperCase()
-        .replace(/\s+/g, "_")} [OK]`;
+      } ${p.missionId.toLowerCase()} // ${moduleName(p.title)} [OK]`;
     }
   };
 
   useEffect(() => {
+    // Sotto reduced-motion la sezione resta com'è nel markup: niente pista da
+    // 300vh, niente sticky, niente timeline. Le card sono già visibili perché
+    // nessuno le ha più nascoste con opacity: 0 (vedi H3 in REVIEW.md).
+    if (reduced) return;
+
     const runway = runwayRef.current;
     const h = terminalRef.current;
     if (!runway || !h) return;
@@ -101,83 +120,32 @@ export default function Projects() {
     // onScroll piloti la timeline fino alla fine (card visibili).
     let observer: ReturnType<typeof onScroll> | null = null;
     let tlDuration = 0;
-    let tourRaf = 0;
-    let touring = false;
-    const stopTour = () => {
-      touring = false;
-      if (tourRaf) cancelAnimationFrame(tourRaf);
-      tourRaf = 0;
-      document.documentElement.style.scrollBehavior = "";
-    };
-    const easeInOutCubic = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    // Front-loaded: parte subito a piena velocità, poi si assesta. Il mix
-    // con la lineare tiene la corsa costante nella fetta centrale.
-    const easeTour = (t: number) => 0.35 * (1 - Math.pow(1 - t, 3)) + 0.65 * t;
 
-    const startTour = () => {
-      stopTour();
-      if (!observer) return;
-      const startY = window.scrollY;
-      const oStart = observer.offsetStart;
-      const oEnd = observer.offsetEnd;
-      const travelDist = oStart - startY;
-      const tourDist = oEnd - oStart;
-      if (tourDist <= 0 || tlDuration <= 0) return;
-      if (startY >= oEnd) {
-        window.scrollTo({ top: oEnd, behavior: "smooth" });
-        return;
-      }
-      const travelDur = Math.max(90, Math.min(420, travelDist * 0.22));
-      const tourDur = Math.max(1500, tlDuration * 0.78);
-      const total = travelDur + tourDur;
-      const t0 = performance.now();
-      touring = true;
-      document.documentElement.style.scrollBehavior = "auto";
-      const step = (now: number) => {
-        if (!touring) return;
-        const t = Math.min(1, (now - t0) / total);
-        let y: number;
-        if (t < travelDur / total) {
-          y = startY + travelDist * easeInOutCubic(t / (travelDur / total));
-        } else {
-          y =
-            oStart +
-            tourDist * easeTour((t - travelDur / total) / (1 - travelDur / total));
-        }
-        window.scrollTo(0, Math.max(0, Math.round(y)));
-        if (t < 1) tourRaf = requestAnimationFrame(step);
-        else stopTour();
-      };
-      tourRaf = requestAnimationFrame(step);
-    };
+    const tour = createProjectsTour({
+      runway,
+      getObserver: () => observer,
+      isPinned: () => pinned,
+      getTimelineDuration: () => tlDuration,
+    });
 
     const onPlayProjects = () => {
-      if (!pinned || !observer) {
+      if (!pinned) {
         document
           .getElementById("lavori")
           ?.scrollIntoView({ behavior: "smooth" });
         return;
       }
-      startTour();
+      tour.start();
     };
-    const cancelTour = () => stopTour();
-    window.addEventListener("play-projects", onPlayProjects);
-    window.addEventListener("wheel", cancelTour, { passive: true });
-    window.addEventListener("touchstart", cancelTour, { passive: true });
-    window.addEventListener("keydown", cancelTour);
-    const removeNavEvents = () => {
-      window.removeEventListener("play-projects", onPlayProjects);
-      window.removeEventListener("wheel", cancelTour);
-      window.removeEventListener("touchstart", cancelTour);
-      window.removeEventListener("keydown", cancelTour);
-      stopTour();
-      runway.style.height = "auto";
-    };
+    const offNavEvent = onSectionEvent(
+      SECTION_EVENTS.playProjects,
+      onPlayProjects,
+    );
 
     const box = h.box();
     if (!box) {
-      removeNavEvents();
+      tour.destroy();
+      offNavEvent();
       return;
     }
 
@@ -253,11 +221,14 @@ export default function Projects() {
     const clearEnd = tl.duration;
 
     // 5. Cards reveal inside the terminal
-    tl.add(gridRef.current!, {
-      opacity: [0, 1],
-      duration: U * 0.05,
-      ease: "linear",
-    });
+    const grid = gridRef.current;
+    if (grid) {
+      tl.add(grid, {
+        opacity: [0, 1],
+        duration: U * 0.05,
+        ease: "linear",
+      });
+    }
     tl.add(cardRefs.current.filter(notNull), {
       opacity: [0, 1],
       translateY: [16, 0],
@@ -266,11 +237,14 @@ export default function Projects() {
     });
 
     // 6. Footer
-    tl.add(footerRef.current!, {
-      opacity: [0, 1],
-      translateY: [6, 0],
-      duration: U * 0.07,
-    });
+    const footer = footerRef.current;
+    if (footer) {
+      tl.add(footer, {
+        opacity: [0, 1],
+        translateY: [6, 0],
+        duration: U * 0.07,
+      });
+    }
 
     tlDuration = tl.duration;
 
@@ -290,7 +264,21 @@ export default function Projects() {
     // Il fascio overlay è gestito da <CrtSweep /> dentro Terminal.
 
     // Scroll observer di anime.js: lega la timeline allo scrolling.
+    // Ultimo valore scritto per ogni nodo aggiornato a mano: onUpdate gira a ogni
+    // frame di scroll e riscriverebbe le stesse 6 proprietà anche identiche.
+    const last = {
+      sync: "",
+      status: "",
+      statusColor: "",
+      visibility: "",
+      pointerEvents: "",
+    };
+
     tl.pause();
+    // seek(0) esplicito: senza, il primo render della timeline pausata potrebbe
+    // arrivare dopo il primo scroll e mostrare per un frame il terminale già
+    //digitato. Da qui in poi i valori di partenza sono quelli delle animazioni.
+    tl.seek(0);
     observer = onScroll({
       target: runway,
       enter: () => (pinned ? "top top" : "85% top"),
@@ -303,44 +291,70 @@ export default function Projects() {
         const p = Math.max(0, Math.min(1, remap));
         const t = tl.duration * p;
         tl.seek(t);
-        if (syncRef.current) {
-          syncRef.current.textContent = `SYNC_${String(
-            Math.round(self.progress * 100),
-          ).padStart(2, "0")}%`;
+
+        const cleared = t >= clearEnd;
+
+        const sync = syncRef.current;
+        const syncText = `SYNC_${String(
+          Math.round(self.progress * 100),
+        ).padStart(2, "0")}%`;
+        if (sync && syncText !== last.sync) {
+          sync.textContent = syncText;
+          last.sync = syncText;
         }
+
         const statusEl = h.status();
         if (statusEl) {
-          const deployed = t >= clearEnd;
-          statusEl.textContent = deployed ? "DEPLOYED" : "STANDBY";
-          statusEl.style.color = deployed ? "#10b981" : "#64748b";
+          const text = cleared ? "DEPLOYED" : "STANDBY";
+          if (text !== last.status) {
+            statusEl.textContent = text;
+            last.status = text;
+          }
+          const color = cleared ? "var(--green)" : "var(--steel)";
+          if (color !== last.statusColor) {
+            statusEl.style.color = color;
+            last.statusColor = color;
+          }
         }
+
         const layerEl = h.layer();
         if (layerEl) {
           // Dopo il clear le righe digitate sono a opacity 0 ma ancora in
           // DOM: nascondile davvero, altrimenti restano "fantasma".
-          layerEl.style.visibility = t >= clearEnd ? "hidden" : "visible";
+          const visibility = cleared ? "hidden" : "visible";
+          if (visibility !== last.visibility) {
+            layerEl.style.visibility = visibility;
+            last.visibility = visibility;
+          }
         }
-        if (gridRef.current) {
-          gridRef.current.style.pointerEvents = t >= clearEnd ? "auto" : "none";
+
+        const gridEl = gridRef.current;
+        if (gridEl) {
+          const pe = cleared ? "auto" : "none";
+          if (pe !== last.pointerEvents) {
+            gridEl.style.pointerEvents = pe;
+            last.pointerEvents = pe;
+          }
         }
       },
     });
 
     const onMqChange = (e: MediaQueryListEvent) => {
-      stopTour();
+      tour.stop();
       setPinned(e.matches);
-      observer.refresh();
+      observer?.refresh();
     };
-    if (mq.addEventListener) mq.addEventListener("change", onMqChange);
+    mq.addEventListener("change", onMqChange);
 
     return () => {
-      observer.revert();
+      observer?.revert();
       tl.revert();
       loops.forEach((a) => a.revert());
-      if (mq.removeEventListener) mq.removeEventListener("change", onMqChange);
-      removeNavEvents();
+      mq.removeEventListener("change", onMqChange);
+      tour.destroy();
+      offNavEvent();
     };
-  }, []);
+  }, [reduced]);
 
   return (
     <section id="lavori" className="relative border-t border-line">
@@ -372,15 +386,14 @@ export default function Projects() {
             ref={terminalRef}
             title="PROJECTS_SYS // ARCHIVE"
             status="STANDBY"
-            statusColor="#64748b"
+            statusColor="var(--steel)"
             lines={LINES}
           >
             <div
               ref={gridRef}
               className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6"
-              style={{ opacity: 0, pointerEvents: "none" }}
             >
-              {PROJECTS.map((p, i) => (
+              {VISIBLE_PROJECTS.map((p, i) => (
                 <div
                   key={p.id}
                   ref={(el) => {
@@ -391,32 +404,24 @@ export default function Projects() {
                   // come bitmap → testo sgranato. Il reveal (opacity + translateY,
                   // ~0.16U) si ridisegna senza problemi.
                   className="h-full"
-                  style={{ opacity: 0, transform: "translateY(18px)" }}
                 >
-                  <div
-                    role="button"
-                    tabIndex={0}
+                  <button
+                    type="button"
                     aria-pressed={selected === p.id}
                     aria-label={`Apri progetto ${p.title}`}
                     onClick={() => handleSelect(p)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleSelect(p);
-                      }
-                    }}
                     className={cn(
-                      "group relative flex h-full cursor-pointer select-none flex-col border p-5 font-mono transition-colors duration-300",
-                      "hover:border-[#ff5c00]/40 active:translate-y-[1px]",
+                      "group relative flex h-full w-full cursor-pointer select-none flex-col border p-5 text-left font-mono transition-colors duration-300",
+                      "hover:border-orange/40 active:translate-y-[1px]",
                       "focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2",
                       "rounded-[2px]",
                       selected === p.id
-                        ? "border-[#ff5c00]/70 bg-[rgba(255,92,0,0.05)]"
-                        : "border-[#2f3f59]",
+                        ? "border-orange/70 bg-orange/5"
+                        : "border-panel-rule",
                     )}
                     style={{
                       background:
-                        "linear-gradient(135deg, rgba(127,160,184,0.06) 0%, rgba(9,13,24,0.94) 100%)",
+                        "linear-gradient(135deg, color-mix(in srgb, var(--ice) 6%, transparent) 0%, color-mix(in srgb, var(--panel-card) 94%, transparent) 100%)",
                     }}
                   >
                     {/* ASCII corner glyphs */}
@@ -425,8 +430,8 @@ export default function Projects() {
                       className={cn(
                         "pointer-events-none absolute -top-[1px] -left-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
                         selected === p.id
-                          ? "text-[#ff5c00]"
-                          : "text-[#5d7187] group-hover:text-[#ff5c00]/70",
+                          ? "text-orange"
+                          : "text-ink-faint group-hover:text-orange/70",
                       )}
                     >
                       ┌
@@ -436,8 +441,8 @@ export default function Projects() {
                       className={cn(
                         "pointer-events-none absolute -top-[1px] -right-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
                         selected === p.id
-                          ? "text-[#ff5c00]"
-                          : "text-[#5d7187] group-hover:text-[#ff5c00]/70",
+                          ? "text-orange"
+                          : "text-ink-faint group-hover:text-orange/70",
                       )}
                     >
                       ┐
@@ -447,8 +452,8 @@ export default function Projects() {
                       className={cn(
                         "pointer-events-none absolute -bottom-[1px] -left-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
                         selected === p.id
-                          ? "text-[#ff5c00]"
-                          : "text-[#5d7187] group-hover:text-[#ff5c00]/70",
+                          ? "text-orange"
+                          : "text-ink-faint group-hover:text-orange/70",
                       )}
                     >
                       └
@@ -458,21 +463,21 @@ export default function Projects() {
                       className={cn(
                         "pointer-events-none absolute -bottom-[1px] -right-[1px] font-mono text-[14px] leading-none transition-colors duration-300",
                         selected === p.id
-                          ? "text-[#ff5c00]"
-                          : "text-[#5d7187] group-hover:text-[#ff5c00]/70",
+                          ? "text-orange"
+                          : "text-ink-faint group-hover:text-orange/70",
                       )}
                     >
                       ┘
                     </span>
 
                     {/* Header row */}
-                    <div className="flex items-baseline gap-2 border-b border-[#2f3f59] pb-3 mb-3">
-                      <span className="text-[15px] font-bold text-[#ff5c00]">
-                        {p.num}
+                    <div className="flex items-baseline gap-2 border-b border-panel-rule pb-3 mb-3">
+                      <span className="text-[15px] font-bold text-orange">
+                        {projectNum(p)}
                       </span>
-                      <h3 className="min-w-0 flex-1 truncate text-[15px] font-bold uppercase tracking-[0.08em] text-[#f2eee2]">
+                      <h3 className="font-display min-w-0 flex-1 truncate text-[15px] font-bold uppercase tracking-[0.08em] text-paper-bright">
                         {selected === p.id && (
-                          <span className="text-[#ff5c00]">▸ </span>
+                          <span className="text-orange">▸ </span>
                         )}
                         {p.title}
                       </h3>
@@ -489,55 +494,55 @@ export default function Projects() {
                     {/* Body rows */}
                     <div className="flex flex-1 flex-col gap-2">
                       <p className="m-0 text-[13px] leading-[1.7]">
-                        <span className="text-[#7a8ca1]">$</span>{" "}
-                        <span className="text-[#93a6b8]">DESC</span>{" "}
-                        <span className="text-[#ff5c00]">&gt;</span>{" "}
-                        <span className="text-[#c6d3df]">
+                        <span className="text-ink-dim">$</span>{" "}
+                        <span className="text-ink-mid">DESC</span>{" "}
+                        <span className="text-orange">&gt;</span>{" "}
+                        <span className="text-ink-value">
                           {p.desc || "[ ---- DATI_IN_CODA ---- ]"}
                         </span>
                       </p>
                       <p className="m-0 text-[13px] leading-[1.7]">
-                        <span className="text-[#7a8ca1]">$</span>{" "}
-                        <span className="text-[#93a6b8]">TAGS</span>{" "}
-                        <span className="text-[#ff5c00]">&gt;</span>{" "}
+                        <span className="text-ink-dim">$</span>{" "}
+                        <span className="text-ink-mid">TAGS</span>{" "}
+                        <span className="text-orange">&gt;</span>{" "}
                         {p.tags.length > 0 ? (
                           p.tags.map((t) => (
-                            <span key={t} className="text-[#a5b6c9]">
+                            <span key={t} className="text-ink-tag">
                               [{t}]
                             </span>
                           ))
                         ) : (
-                          <span className="text-[#7a8ca1]">[EMPTY]</span>
+                          <span className="text-ink-dim">[EMPTY]</span>
                         )}
                       </p>
                       <ASCIIProgressBar p={p} />
                     </div>
 
                     {/* Footer row */}
-                    <div className="mt-3 flex items-center justify-between border-t border-[#2f3f59] pt-3 text-[11px]">
-                      <span className="text-[#7a8ca1] tracking-[0.12em]">
+                    <div className="mt-3 flex items-center justify-between border-t border-panel-rule pt-3 text-[11px]">
+                      <span className="text-ink-dim tracking-[0.12em]">
                         {p.missionId}
                       </span>
                       <span
                         className={cn(
                           "font-bold tracking-[0.1em] transition-colors duration-300",
                           selected === p.id
-                            ? "text-[#10b981]"
-                            : "text-[#ff5c00] group-hover:underline",
+                            ? "text-green"
+                            : "text-orange group-hover:underline",
                         )}
                       >
                         {selected === p.id ? "[ OPENED ]" : "OPEN ▸"}
                       </span>
                     </div>
-                  </div>
+                  </button>
                 </div>
               ))}
 
               {/* Console echo line */}
-              <div className="md:col-span-2 flex items-center gap-2 font-mono text-[12px] text-[#93a6b8] mt-1">
-                <span className="text-[#ff5c00]">&gt;</span>
+              <div className="md:col-span-2 flex items-center gap-2 font-mono text-[12px] text-ink-mid mt-1">
+                <span className="text-orange">&gt;</span>
                 <span ref={echoRef}>
-                  TREE_VIEW // {PROJECTS.length} ENTRIES
+                  TREE_VIEW // {VISIBLE_PROJECTS.length} ENTRIES
                 </span>
               </div>
             </div>
@@ -547,7 +552,6 @@ export default function Projects() {
           <div
             ref={footerRef}
             className="mt-10 border-t border-line pt-6 font-mono text-[11px] text-ice-dim"
-            style={{ opacity: 0 }}
           >
             <p>
               <span className="text-orange">&gt;</span> ROSTER in

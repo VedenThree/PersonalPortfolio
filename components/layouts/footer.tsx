@@ -1,4 +1,5 @@
 import Reveal from "@/components/animations/reveal";
+import NavLink from "@/components/ui/nav-link";
 
 export default function Footer() {
   return (
@@ -15,32 +16,34 @@ export default function Footer() {
             <span className="text-orange">◈</span> Codice, sistemi, dati ·{" "}
             <span className="text-paper/60">Italia</span>
           </p>
-          <nav className="flex gap-6 list-none">
+          <nav aria-label="Collegamenti di piede">
+          <ul className="flex gap-6 list-none">
             <li>
-              <a
-                href="#lavori"
+              <NavLink
+                section="lavori"
                 className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
               >
                 Progetti
-              </a>
+              </NavLink>
             </li>
             <li>
-              <a
-                href="#profilo"
+              <NavLink
+                section="profilo"
                 className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
               >
                 Profilo
-              </a>
+              </NavLink>
             </li>
             <li>
-              <a
-                href="#contatti"
+              <NavLink
+                section="contatti"
                 className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
               >
                 Contatti
-              </a>
+              </NavLink>
             </li>
-          </nav>
+          </ul>
+        </nav>
         </div>
       </footer>
     </Reveal>

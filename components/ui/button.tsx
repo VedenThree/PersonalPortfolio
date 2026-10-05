@@ -1,20 +1,27 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
+// Angoli smussati: stessa forma dei CTA inline che il design system usa ovunque.
+const chamfer =
+  "[clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
+
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-[4px] font-mono text-[13px] tracking-[0.02em] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "group inline-flex items-center justify-center font-mono text-[12px] px-[26px] py-3.5 transition-all duration-200 cursor-pointer disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary:
+        primary: cn(
           "border border-orange text-orange bg-transparent hover:bg-orange hover:text-ink",
-        secondary:
+          chamfer
+        ),
+        secondary: cn(
           "border border-line text-paper-dim bg-transparent hover:border-ice hover:text-ice",
-        ghost:
-          "text-ice-dim hover:text-orange hover:bg-orange/10 transition-colors",
+          chamfer
+        ),
+        ghost: "text-ice-dim hover:text-orange hover:bg-orange/10 transition-colors",
       },
       size: {
-        default: "px-[26px] py-3.5",
+        default: "",
         sm: "px-4 py-2 text-[12px]",
         lg: "px-[30px] py-4 text-[14px]",
       },

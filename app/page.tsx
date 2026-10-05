@@ -10,10 +10,7 @@ export default function Home() {
     <main className="flex flex-1 flex-col">
       <Hero />
       <Projects />
-      <SectionFlow>
-        <Profile />
-        <Contact />
-      </SectionFlow>
+      <SectionFlow a={<Profile />} b={<Contact />} />
       <Footer />
     </main>
   );

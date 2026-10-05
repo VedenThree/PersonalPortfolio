@@ -11,6 +11,7 @@ function Input({
       type={type}
       className={cn(
         "w-full bg-surface border border-line rounded px-4 py-3 font-mono text-sm text-paper placeholder:text-ice-dim/40 focus:border-orange transition-colors",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}
       {...props}

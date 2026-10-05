@@ -3,76 +3,122 @@ export type ProjectStatus = "DEPLOYED" | "STANDBY" | "IDEA";
 export type Project = {
   id: string;
   status: ProjectStatus;
+  /** Ordinale canonico, "PRJ-03". `num` ne deriva: non va duplicato a mano. */
   missionId: string;
-  num: string;
   title: string;
   desc: string;
   tags: string[];
   completion: number;
+  /**
+   * I segnaposto restano in PROJECTS (così `LOAD_MODULES [2/4]` ha un
+   * denominatore reale) ma non vengono pubblicati: usa VISIBLE_PROJECTS.
+   *
+   * Un segnaposto è un guscio vuoto. `visible: true` su un guscio vuoto è un
+   * errore di configurazione, non una scelta: renderizzerebbe una card con
+   * "[ EMPTY ]", descrizione di fallback e barra a zero.
+   */
+  placeholder: boolean;
   visible: boolean;
 };
+
+/** Numero di slot mostrato sulla card: "PRJ-03" → "03". */
+export const projectNum = (p: Project) => p.missionId.replace(/^PRJ-/, "");
+
+/** Un titolo diventa identificatore di modulo: "Dinamiche Verticali" → DINAMICHE_VERTICALI */
+export const moduleName = (title: string) =>
+  title.toUpperCase().replace(/\s+/g, "_");
 
 export const STATUS_META: Record<
   ProjectStatus,
   { hex: string; chip: string }
 > = {
   DEPLOYED: {
-    hex: "#10b981",
-    chip: "border-[rgba(16,185,129,0.4)] text-[#10b981]",
+    hex: "var(--green)",
+    chip: "border-green/40 text-green",
   },
   STANDBY: {
-    hex: "#38bdf8",
-    chip: "border-[rgba(56,189,248,0.35)] text-[#38bdf8]",
+    hex: "var(--ice)",
+    chip: "border-ice/35 text-ice",
   },
   IDEA: {
-    hex: "#64748b",
-    chip: "border-[rgba(100,116,139,0.35)] text-[#64748b]",
+    hex: "var(--steel)",
+    chip: "border-steel/35 text-steel",
   },
 };
 
-export const PROJECTS: Project[] = [
+const PUBLISHED: Project[] = [
   {
     id: "dinamiche-verticali",
     status: "DEPLOYED",
     missionId: "PRJ-01",
-    num: "01",
     title: "Dinamiche Verticali",
     desc: "Piattaforma operativa per la gestione e l'analisi di dati verticali. Attiva e visibile.",
     tags: ["React", "Next.js", "TypeScript", "MySQL"],
     completion: 100,
+    placeholder: false,
     visible: true,
   },
   {
     id: "skillswap",
     status: "STANDBY",
     missionId: "PRJ-02",
-    num: "02",
     title: "SkillSwap",
     desc: "Piattaforma di scambio competenze in corso di completamento.",
     tags: ["React", "Next.js", "TypeScript", "MongoDB"],
     completion: 50,
-    visible: false,
+    placeholder: false,
+    visible: true,
   },
+];
+
+// Slot riservati: la numerazione resta stabile quando si pubblica un progetto.
+const RESERVED: Project[] = [
   {
     id: "progetto-03",
     status: "IDEA",
     missionId: "PRJ-03",
-    num: "03",
     title: "Progetto 03",
     desc: "",
     tags: [],
     completion: 0,
+    placeholder: true,
     visible: false,
   },
   {
     id: "progetto-04",
     status: "IDEA",
     missionId: "PRJ-04",
-    num: "04",
     title: "Progetto 04",
     desc: "",
     tags: [],
     completion: 0,
+    placeholder: true,
     visible: false,
   },
 ];
+
+export const PROJECTS: Project[] = [...PUBLISHED, ...RESERVED];
+
+/**
+ * Guardia di pubblicazione: un segnaposto non può finire nella UI, anche se
+ * qualcuno lo marca `visible: true` per errore.
+ *
+ * Non lancia: l'obiettivo è che la pagina continui a funzionare e che lo
+ * sviluppatore veda il perché. In sviluppo segnala l'errore di configurazione,
+ * in produzione lascia semplicemente fuori il segnaposto.
+ */
+const isPublishable = (p: Project) => {
+  if (!p.placeholder) return true;
+  if (p.visible && process.env.NODE_ENV !== "production") {
+    console.error(
+      `[projects-data] "${p.id}" è un segnaposto (placeholder: true) ma ha visible: true. ` +
+        `Rimuovi visible o compilare desc/tag/completion prima di pubblicarlo.`,
+    );
+  }
+  return false;
+};
+
+/** Unica lista da usare per il rendering: terminale, griglia e contatori. */
+export const VISIBLE_PROJECTS: Project[] = PROJECTS.filter(
+  (p) => p.visible && isPublishable(p),
+);

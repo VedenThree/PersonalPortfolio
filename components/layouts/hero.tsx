@@ -1,4 +1,5 @@
-import HeroOrbital from "../ui/HeroOrbital";
+import NavLink from "@/components/ui/nav-link";
+import HeroOrbital from "@/components/ui/HeroOrbital";
 
 export default function Hero() {
   return (
@@ -17,40 +18,32 @@ export default function Hero() {
         </div>
 
         <h1 className="font-display font-bold text-[clamp(36px,4.6vw,66px)] leading-[1.04] tracking-[-0.01em] text-paper">
-          <span className="hero-word">Sviluppo</span>{" "}
-          <span className="hero-word">web</span>{" "}
-          <span className="hero-word">, un</span>{" "}
-          <span className="hero-word">
-            <span className="text-orange">sistema</span>
-          </span>{" "}
-          <span className="hero-word">alla</span>{" "}
-          <span className="hero-word">volta.</span>
+          Sviluppo web, un{" "}
+          <span className="text-orange">sistema</span> alla volta.
         </h1>
 
-        <p className="hero-sub mt-9">
-          <span className="block max-w-[440px] text-base text-paper-dim">
-            Web Developer Full-Stack specializzato in applicazioni web robuste, scalabili e sicure. Progetto interfacce reattive con
-            React.js, backend performanti con Next.js e architetture dati
-            affidabili con MongoDB.
-          </span>
+        <p className="mt-9 max-w-[440px] text-base text-paper-dim">
+          Web Developer Full-Stack specializzato in applicazioni web robuste,
+          scalabili e sicure. Progetto interfacce reattive con React.js, backend
+          performanti con Next.js e architetture dati affidabili con MongoDB.
         </p>
 
-        <div className="hero-cta mt-10 flex flex-wrap gap-4">
-          <a
-            href="#lavori"
+        <div className="mt-10 flex flex-wrap gap-4">
+          <NavLink
+            section="lavori"
             className="group inline-flex items-center gap-2.5 relative border border-orange font-mono text-[12px] px-[26px] py-3.5 text-orange transition-all duration-200 hover:bg-orange hover:text-ink [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
           >
             Vedi i progetti{" "}
             <span className="inline-block transition-transform duration-200 group-hover:translate-y-[3px]">
               ↓
             </span>
-          </a>
-          <a
-            href="#contatti"
-            className="inline-flex items-center gap-2.5 relative border border-line font-mono text-[12px] px-[26px] py-3.5 text-paper-dim transition-all duration-200 hover:bg-transparent hover:border-ice hover:text-ice [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
+          </NavLink>
+          <NavLink
+            section="contatti"
+            className="inline-flex items-center gap-2.5 relative border border-line font-mono text-[12px] px-[26px] py-3.5 text-paper-dim transition-all duration-200 hover:border-ice hover:text-ice [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
           >
             Contatti
-          </a>
+          </NavLink>
         </div>
       </div>
 

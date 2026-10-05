@@ -9,13 +9,18 @@ const FACTS = [
   { label: "SETTORE", value: "Sviluppo Web", sub: "Applicazioni" },
 ];
 
-const LEVELS: Record<number, string> = {
+// Un livello non è un numero arbitrario: se `SKILL_BARS` aggiungeva un 2 qui
+// sotto, `LEVELS[2]` era `undefined` e la barra mostrava una cella vuota con
+// un aria-label rotto, senza errori di tipo. L'unione lo impedisce.
+type SkillLevel = 3 | 4 | 5;
+
+const LEVELS: Record<SkillLevel, string> = {
   5: "Dominio",
   4: "Produzione",
   3: "Autonomo",
 };
 
-const SKILL_BARS = [
+const SKILL_BARS: { name: string; level: SkillLevel }[] = [
   { name: "HTML", level: 5 },
   { name: "CSS", level: 5 },
   { name: "JavaScript", level: 4 },

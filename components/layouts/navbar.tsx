@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { ChevronRight } from "lucide-react";
+import { goToSection } from "@/lib/section-nav";
 
 const NAV_ITEMS = [
   { num: "00", label: "Home", id: "hero" },
@@ -10,13 +11,16 @@ const NAV_ITEMS = [
   { num: "03", label: "Contatti", id: "contatti" },
 ] as const;
 
-const ROW = 68;
-
 function useNavScroll() {
   const [active, setActive] = useState<string>(NAV_ITEMS[0].id);
 
   useEffect(() => {
-    const onScroll = () => {
+    // Una getBoundingClientRect per voce di nav, a ogni evento scroll: senza
+    // coalescing ogni evento forza un layout sincrono. Un rAF per frame dà lo
+    // stesso risultato (projects.tsx e section-flow.tsx già lo fanno).
+    let ticking = false;
+    const measure = () => {
+      ticking = false;
       const pos = window.scrollY + window.innerHeight * 0.35;
       let current: string = NAV_ITEMS[0].id;
       for (const item of NAV_ITEMS) {
@@ -27,25 +31,26 @@ function useNavScroll() {
       }
       setActive(current);
     };
-    const t = setTimeout(onScroll, 60);
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(measure);
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    // Prima passata al frame successivo al mount: le sezioni sono già nel DOM,
+    // quindi non serve aspettare un timeout per essere sicuri.
+    const raf = requestAnimationFrame(measure);
+
     return () => {
-      clearTimeout(t);
+      cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
   }, []);
 
-  const goTo = (id: string) => {
-    if (id === "lavori") {
-      window.dispatchEvent(new CustomEvent("play-projects"));
-      return;
-    }
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  return { active, goTo };
+  return { active, goTo: goToSection };
 }
 
 function MobileRail({
@@ -56,10 +61,12 @@ function MobileRail({
   goTo: (id: string) => void;
 }) {
   return (
-    <aside className="fixed left-0 top-0 z-50 flex h-screen w-[52px] flex-col items-center border-r border-line bg-[#05070b]/90 py-5 lg:hidden">
+    <aside className="fixed left-0 top-0 z-50 flex h-screen w-[var(--rail-w)] flex-col items-center border-r border-line bg-ink-deep/90 py-5 lg:hidden">
+      {/* Marchio: torna alla sezione attiva, non a una destinazione diversa */}
       <button
-        onClick={() => goTo("lavori")}
+        onClick={() => goTo("hero")}
         aria-label="Home"
+        title="Home"
         className="mb-8 flex size-7 shrink-0 cursor-pointer items-center justify-center bg-orange"
       >
         <span className="font-mono text-[11px] font-extrabold leading-none text-white">
@@ -93,7 +100,7 @@ function MobileRail({
       </nav>
 
       <div
-        className="size-[6px] shrink-0 rounded-full bg-[#22c55e] animate-pulse-glow"
+        className="size-[6px] shrink-0 rounded-full bg-green animate-pulse-glow"
         title="Online"
       />
     </aside>
@@ -109,7 +116,9 @@ export default function NavBar() {
 
   return (
     <>
-      <aside className="fixed left-0 top-0 z-50 hidden h-screen w-[220px] flex-col bg-[#05070b]/90 backdrop-blur-[12px] lg:flex">
+      {/* nav-sidebar: su viewport bassi le 4 righe fisse da --nav-row-h non
+            entrano, in quel caso il nav scorre (regola in globals.css) */}
+        <aside className="nav-sidebar fixed left-0 top-0 z-50 hidden h-screen w-[var(--sidebar-w)] flex-col bg-ink-deep/90 backdrop-blur-[12px] lg:flex">
         <div className="border-b border-line px-5 pb-5 pt-6">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center bg-orange">
@@ -148,10 +157,12 @@ export default function NavBar() {
             aria-hidden
             className="absolute left-0 top-0 h-full w-px bg-ice/10"
           />
+          {/* L'altezza della riga e il passo dell'indicatore vivono entrambe in
+              --nav-row-h: nessuno dei due può divergere. */}
           <span
             aria-hidden
-            className="absolute left-0 top-0 h-[68px] w-[2px] bg-orange transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            style={{ transform: `translateY(${activeIndex * ROW}px)` }}
+            className="nav-indicator absolute left-0 top-0 h-[var(--nav-row-h)] w-[2px] bg-orange transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{ "--nav-index": activeIndex } as CSSProperties}
           />
           {NAV_ITEMS.map(({ num, label, id }) => {
             const isActive = active === id;
@@ -159,7 +170,7 @@ export default function NavBar() {
               <button
                 key={id}
                 onClick={() => goTo(id)}
-                className={`group flex h-[68px] cursor-pointer items-center border-b border-ice/5 px-5 text-left transition-colors ${
+                className={`group flex h-[var(--nav-row-h)] cursor-pointer items-center border-b border-ice/5 px-5 text-left transition-colors ${
                   isActive ? "bg-orange/5" : "hover:bg-ice/5"
                 }`}
               >
@@ -200,8 +211,8 @@ export default function NavBar() {
             <span className="text-right">122m ASL</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="size-[6px] rounded-full bg-[#22c55e] animate-pulse-glow" />
-            <span className="font-mono text-[8px] tracking-[0.88px] text-[#22c55e]">
+            <span className="size-[6px] rounded-full bg-green animate-pulse-glow" />
+            <span className="font-mono text-[8px] tracking-[0.88px] text-green">
               ONLINE
             </span>
           </div>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect } from "react";
+
 const STARS = Array.from({ length: 70 }, (_, i) => ({
   id: i,
   top: (i * 37) % 100,
@@ -17,17 +21,33 @@ const MOTES = Array.from({ length: 18 }, (_, i) => ({
 }));
 
 export default function BgScene() {
+  // 88 elementi animati più un layer aurora con blur e mix-blend: il browser
+  // continua a dipingere anche con la tab in background. Sospendere
+  // animation-play-state quando la tab è nascosta libera quel lavoro.
+  useEffect(() => {
+    const root = document.documentElement;
+    const onVisibility = () => {
+      root.classList.toggle("scene-paused", document.hidden);
+    };
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      root.classList.remove("scene-paused");
+    };
+  }, []);
+
   return (
-    <div className="bg-scene fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      <div className="sky absolute inset-0 bg-[linear-gradient(180deg,var(--bg-deep)_0%,var(--bg)_45%,var(--bg)_100%)]" />
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--bg-deep)_0%,var(--bg)_45%,var(--bg)_100%)]" />
       <div
-        className="aurora absolute w-[150%] h-[65%] -top-[15%] -left-[25%] opacity-40 animate-aurora will-change-transform mix-blend-screen blur-[70px] bg-[radial-gradient(ellipse_at_28%_30%,rgba(127,160,184,0.55),transparent_60%),radial-gradient(ellipse_at_68%_42%,rgba(255,90,31,0.28),transparent_55%),radial-gradient(ellipse_at_48%_62%,rgba(87,96,63,0.4),transparent_60%)]"
+        className="absolute w-[150%] h-[65%] -top-[15%] -left-[25%] opacity-40 animate-aurora will-change-transform mix-blend-screen blur-[70px] bg-[radial-gradient(ellipse_at_28%_30%,color-mix(in_srgb,var(--ice)_55%,transparent),transparent_60%),radial-gradient(ellipse_at_68%_42%,color-mix(in_srgb,var(--orange)_28%,transparent),transparent_55%),radial-gradient(ellipse_at_48%_62%,color-mix(in_srgb,var(--olive)_40%,transparent),transparent_60%)]"
       />
       <div id="particles" className="absolute inset-0">
         {STARS.map((s) => (
           <span
             key={s.id}
-            className="star absolute rounded-full bg-paper animate-twinkle"
+            className="absolute rounded-full bg-paper animate-twinkle"
             style={{
               top: `${s.top}%`,
               left: `${s.left}%`,
@@ -41,7 +61,7 @@ export default function BgScene() {
         {MOTES.map((m) => (
           <span
             key={m.id}
-            className="mote absolute rounded-full bg-ice opacity-50 animate-drift"
+            className="absolute rounded-full bg-ice opacity-50 animate-drift"
             style={{
               left: `${m.left}%`,
               bottom: `${m.bottom}%`,

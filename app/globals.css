@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* @layer base sta in cima: le regole che userà devono precederla per convenzione.
+   * { @apply border-border } è ciò che dà a ogni elemento il bordo `--line`. */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 :root {
   --bg: #0a0e13;
   --bg-deep: #05070b;
@@ -14,6 +25,46 @@
   --paper-dim: rgba(233, 229, 218, 0.7);
   --line: rgba(233, 229, 218, 0.1);
   --surface: rgba(10, 14, 19, 0.88);
+  /* Semantici di stato: condivisi da progetti, navbar, terminale e HeroOrbital. */
+  --green: #10b981;
+  --steel: #64748b;
+
+  /* Superfici dei pannelli a strumento (terminale, console, radar, card).
+     Valori 1:1 rispetto agli hex che erano scritti inline nei componenti:
+     tokenizzarli non deve cambiare un solo pixel. */
+  --panel: #0b101d;
+  --panel-ghost: #0b101d5d;
+  --panel-core: #050811;
+  --panel-line: #1b2438;
+  --panel-line-strong: #26344a;
+  --panel-rule: #2f3f59;
+  --panel-cell: #2a3a4d;
+  --panel-card: #090d18;
+  /* Fondo dei campi modulo: quasi nero e leggermente traslucido, così la
+     scena resta visibile sotto il form. */
+  --field: rgba(6, 6, 15, 0.85);
+
+  /* Rampa fredda dei testi secondari, dal più spento al più luminoso.
+     `--ink-*` sta sotto `--ink`/`--paper` per ordine di grandezza. */
+  --ink-faint: #5d7187;
+  --ink-dim: #7a8ca1;
+  --ink-title: #7d90a5;
+  --ink-module: #8497ab;
+  --ink-mid: #93a6b8;
+  --ink-tag: #a5b6c9;
+  --ink-plain: #b9c7d6;
+  --ink-value: #c6d3df;
+
+  /* Due bianchi quasi identici con temperature diverse: caldo sulle card,
+     freddo sui readout del radar. */
+  --paper-bright: #f2eee2;
+  --paper-cool: #f1f5f9;
+
+  /* Geometria della navbar. Unica fonte: i px comparivano sia in Tailwind
+     sia in TS (l'indicatore attivo), quindi non potevano divergere. */
+  --rail-w: 52px;
+  --sidebar-w: 220px;
+  --nav-row-h: 68px;
   --background: var(--ink-deep);
   --foreground: var(--paper);
   --card: var(--ink-deep);
@@ -48,8 +99,29 @@
   --color-olive: var(--olive);
   --color-paper: var(--paper);
   --color-paper-dim: var(--paper-dim);
+  --color-paper-bright: var(--paper-bright);
+  --color-paper-cool: var(--paper-cool);
   --color-line: var(--line);
   --color-surface: var(--surface);
+  --color-green: var(--green);
+  --color-steel: var(--steel);
+  --color-panel: var(--panel);
+  --color-panel-ghost: var(--panel-ghost);
+  --color-panel-core: var(--panel-core);
+  --color-panel-line: var(--panel-line);
+  --color-panel-line-strong: var(--panel-line-strong);
+  --color-panel-rule: var(--panel-rule);
+  --color-panel-cell: var(--panel-cell);
+  --color-panel-card: var(--panel-card);
+  --color-field: var(--field);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-title: var(--ink-title);
+  --color-ink-module: var(--ink-module);
+  --color-ink-mid: var(--ink-mid);
+  --color-ink-tag: var(--ink-tag);
+  --color-ink-plain: var(--ink-plain);
+  --color-ink-value: var(--ink-value);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -66,11 +138,13 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  /* JetBrains Mono è il volto degli HUD (HeroOrbital): tondo e leggibile a
+     8-12px dove IBM Plex Mono si chiude. `--font-mono` resta il mono
+     documentale del resto della pagina. */
   --font-display: var(--font-archivo);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
   --font-jet: var(--font-jetbrains-mono);
-  --font-heading: var(--font-sans);
   --animate-aurora: aurora-drift 24s ease-in-out infinite alternate;
   --animate-twinkle: twinkle ease-in-out infinite;
   --animate-drift: drift linear infinite;
@@ -112,55 +186,6 @@
   }
 }
 
-@keyframes reveal-up {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100vh);
-  }
-}
-
-@keyframes radar-sweep {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes radar-return {
-  0%,
-  100% {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-  10% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  24% {
-    opacity: 0.85;
-    transform: scale(1.06);
-  }
-  42% {
-    opacity: 0;
-    transform: scale(1.12);
-  }
-}
-
 @keyframes pulse-glow {
   0%,
   100% {
@@ -180,133 +205,117 @@
     animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Sotto reduced-motion la timeline dei progetti non gira (vedi projects.tsx):
+     le righe digitate resterebbero come overlay statico sopra le card.
+     Il terminale si riduce al suo stato finale, che è già il contenuto. */
+  .terminal-lines {
+    display: none;
+  }
 }
 
-body {
-  font-family: var(--font-plex-sans), "IBM Plex Sans", Helvetica, sans-serif;
-}
-
-.crt-scanline::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(127, 160, 184, 0.03) 2px,
-    rgba(127, 160, 184, 0.03) 4px
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-.crosshair::before,
-.crosshair::after {
-  content: "";
-  position: absolute;
-  background: rgba(127, 160, 184, 0.06);
-  pointer-events: none;
-}
-.crosshair::before {
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-}
-.crosshair::after {
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-}
-
-.card-hover {
-  background: var(--surface);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--line);
-  transition:
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.card-hover:hover {
-  transform: translateY(-4px);
-  border-color: rgba(127, 160, 184, 0.3);
-  box-shadow: 0 8px 32px rgba(255, 90, 31, 0.06);
-}
-
-.tag-hover {
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-.tag-hover:hover {
-  background: rgba(255, 90, 31, 0.08);
-  border-color: rgba(255, 90, 31, 0.3);
-  color: var(--orange);
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-[class*="font-display"] {
-  font-family: var(--font-archivo), "Archivo", "Archivo Expanded", sans-serif;
-  font-stretch: 125%;
-}
-
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--orange);
-  outline-offset: 2px;
-}
-
-.hero-sub p {
-  max-width: 440px;
-}
-
-.hero-word {
-  display: inline;
-}
-
-.arc-ring {
-  border-radius: 50%;
-  border: 3px solid transparent;
-  border-top-color: #ff5c00;
-  border-right-color: #ff5c00; /* due lati colorati = ~semicerchio */
-}
-.dark {
-  --background: var(--ink-deep);
-  --foreground: var(--paper);
-  --card: var(--ink-deep);
-  --card-foreground: var(--paper);
-  --popover: var(--ink-deep);
-  --popover-foreground: var(--paper);
-  --primary: var(--orange);
-  --primary-foreground: var(--ink-deep);
-  --secondary: var(--ice-dim);
-  --secondary-foreground: var(--paper);
-  --muted: var(--ink);
-  --muted-foreground: var(--ice-dim);
-  --accent: var(--orange);
-  --accent-foreground: var(--ink-deep);
-  --destructive: var(--orange);
-  --border: var(--line);
-  --input: var(--ink);
-  --ring: var(--orange);
-}
+/* Da qui in giù le regole stanno dentro un layer, così le utility Tailwind
+   possono sovrascriverle in modo esplicito. Prima erano tutte fuori layer e
+   vincevano su qualunque utility: per questo `focus:outline-none` non poteva
+   cancellare l'anello di focus globale. */
 
 @layer base {
-  * {
-    @apply border-border;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-archivo), "Archivo", sans-serif;
+    font-stretch: 125%;
   }
-  body {
-    @apply bg-background text-foreground;
+}
+
+@layer components {
+  /* Tailwind genera `.font-display` nel layer utilities e ci mette sopra la
+     family; lo stretch resta nostro. Serve per i titoli che non sono h1-h6 ma
+     vogliono comunque Archivo allungato. */
+  .font-display {
+    font-stretch: 125%;
+  }
+
+  .crt-scanline::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--ice) 3%, transparent) 2px,
+      color-mix(in srgb, var(--ice) 3%, transparent) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .crosshair::before,
+  .crosshair::after {
+    content: "";
+    position: absolute;
+    background: color-mix(in srgb, var(--ice) 6%, transparent);
+    pointer-events: none;
+  }
+  .crosshair::before {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+  .crosshair::after {
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .arc-ring {
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: var(--orange);
+    border-right-color: var(--orange); /* due lati colorati = ~semicerchio */
+  }
+
+  /* L'indicatore della voce attiva. Il passo è un multiplo di --nav-row-h
+     calcolato in CSS: in TS c'è solo l'indice, nessun px da tenere allineato. */
+  .nav-indicator {
+    transform: translateY(calc(var(--nav-row-h) * var(--nav-index, 0)));
+  }
+
+  /* Sidebar desktop: su viewport bassi le 4 righe fisse da --nav-row-h non
+     entrano. Il nav scorre, header e footer restano ancorati. */
+  @media (max-height: 700px) {
+    .nav-sidebar {
+      overflow-y: auto;
+    }
+  }
+}
+
+/* utilities, non components: `.scene-paused` deve battere le animazioni `animate-*`,
+   che vivono nel layer utilities. In un layer precedente perderebbe per ordine
+   di layer, non per specificità. */
+@layer utilities {
+  /* Tab in background: sospende i 88 elementi animati dello sfondo. */
+  .scene-paused .animate-twinkle,
+  .scene-paused .animate-drift,
+  .scene-paused .animate-aurora,
+  .scene-paused .animate-pulse-glow {
+    animation-play-state: paused;
+  }
+
+  /* L'anello di focus globale è una garanzia di accessibilità, non un tema:
+     sta in utilities perché un `focus:outline-none` esplicito possa
+     davvero cancellarlo. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
   }
 }

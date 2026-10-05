@@ -45,7 +45,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     title,
     version = "V.24.1",
     status = "STANDBY",
-    statusColor = "#64748b",
+    statusColor = "var(--steel)",
     lines,
     children,
     className,
@@ -79,38 +79,34 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     <div
       ref={boxRef}
       className={cn(
-        "bg-[#0b101d] border border-[#1b2438] rounded-xs w-full relative overflow-hidden",
+        "bg-panel border border-panel-line rounded-xs w-full relative overflow-hidden",
         className,
       )}
       // Niente will-change: sotto un layer promosso i glifi verrebbero riscalati
       // come bitmap, quindi sfocati per tutta l'animazione.
-      style={{
-        opacity: 0,
-        transformOrigin: "top center",
-      }}
+      //
+      // E nessuna opacity di partenza: senza JS — o sotto reduced-motion, dove
+      // la timeline non gira — il terminale deve essere già leggibile.
+      // projects.tsx lo nasconde solo quando sa che lo riaccenderà.
+      style={{ transformOrigin: "top center" }}
     >
-      {/* Texture CRT + fascio di dati, entrambi overlay decorativi */}
-      <span
+      {/* Texture CRT + fascio di dati, entrambi overlay decorativi.
+          La texture riusa .crt-scanline invece di ripetere il gradient. */}
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(127,160,184,0.03) 2px, rgba(127,160,184,0.03) 4px)",
-          opacity: 0.6,
-          zIndex: 1,
-        }}
+        className="crt-scanline pointer-events-none absolute inset-0 opacity-60"
       />
       <CrtSweep />
 
       {/* Header: pallini, titolo, stato live */}
-      <div className="relative border-b border-[#1b2438] px-4 py-3 flex items-center justify-between gap-3">
+      <div className="relative border-b border-panel-line px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex gap-1.5 shrink-0">
-            <span className="size-2.5 rounded-full bg-[#ff5c00]" />
-            <span className="size-2.5 rounded-full bg-[#64748b]" />
-            <span className="size-2.5 rounded-full bg-[#64748b]" />
+            <span className="size-2.5 rounded-full bg-orange" />
+            <span className="size-2.5 rounded-full bg-steel" />
+            <span className="size-2.5 rounded-full bg-steel" />
           </div>
-          <p className="font-mono text-[11px] text-[#7d90a5] ml-2 whitespace-nowrap overflow-hidden tracking-[0.14em]">
+          <p className="font-mono text-[11px] text-ink-title ml-2 whitespace-nowrap overflow-hidden tracking-[0.14em]">
             {title}
           </p>
         </div>
@@ -122,19 +118,21 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           >
             {status}
           </span>
-          <p className="font-mono text-[10px] text-[#ff5c00]">{version}</p>
+          <p className="font-mono text-[10px] text-orange">{version}</p>
         </div>
       </div>
 
       {/* Terminal body */}
       <div className="relative">
         {/* Le card definiscono l'altezza naturale del terminale */}
-        <div className="relative z-10 p-5">{children}</div>
+<div className="relative z-10 p-5">{children}</div>
 
-        {/* Righe digitate: overlay assoluto sulle card, pilotato da fuori */}
+        {/* Righe digitate: overlay assoluto sulle card, pilotato da fuori.
+            `terminal-lines` le nasconde sotto reduced-motion, quando nessuna
+            timeline le accende e resterebbero sovrapposte alle card. */}
         <div
           ref={layerRef}
-          className="absolute inset-0 z-20 pointer-events-none flex flex-col gap-2.5 px-5 pt-5 pb-5"
+          className="terminal-lines absolute inset-0 z-20 pointer-events-none flex flex-col gap-2.5 px-5 pt-5 pb-5"
         >
           {lines.map((line, i) => (
             <div key={line.id} className="flex items-center gap-2.5">
@@ -144,20 +142,19 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 }}
                 className={cn(
                   "font-mono text-[13px] shrink-0",
-                  line.ready ? "text-[#ff5c00] font-bold" : "text-[#7a8ca1]",
+                  line.ready ? "text-orange font-bold" : "text-ink-dim",
                 )}
-                style={{ opacity: 0 }}
               >
-                {line.ready ? ">" : line.module ? "│" : ">"}
+                {line.module ? "│" : ">"}
               </span>
               <span
                 className={cn(
                   "font-mono text-[13px] flex-1 overflow-hidden whitespace-pre",
                   line.ready
-                    ? "text-[#ff5c00] font-bold"
+                    ? "text-orange font-bold"
                     : line.module
-                      ? "text-[#8497ab]"
-                      : "text-[#b9c7d6]",
+                      ? "text-ink-module"
+                      : "text-ink-plain",
                 )}
               >
                 {/* Un span per carattere: la timeline li accende uno a uno */}
@@ -165,9 +162,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   <span
                     key={j}
                     ref={(el) => {
-                      if (el) rowsRef.current[i].chars[j] = el;
+                      // Anche il cleanup riceve null: senza questo i nodi staccati
+                      // resterebbero referenziati in rowsRef.
+                      rowsRef.current[i].chars[j] = el;
                     }}
-                    style={{ opacity: 0 }}
                   >
                     {c}
                   </span>
@@ -176,8 +174,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               {line.ready ? (
                 <span
                   ref={cursorRef}
-                  className="inline-block w-2.25 h-4 bg-[#ff5c00] shrink-0"
-                  style={{ opacity: 0 }}
+                  className="inline-block w-2.25 h-4 bg-orange shrink-0"
                 />
               ) : line.res ? (
                 <span
@@ -185,7 +182,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                     rowsRef.current[i].res = el;
                   }}
                   className="font-mono font-bold text-[13px] whitespace-nowrap"
-                  style={{ color: line.color ?? "#64748b", opacity: 0 }}
+                  style={{ color: line.color ?? "var(--steel)" }}
                 >
                   {line.res}
                 </span>

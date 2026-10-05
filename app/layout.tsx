@@ -30,9 +30,29 @@ const jetbrainMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+// In export statico i metadati Open Graph richiedono un base URL assoluto:
+// senza metadataBase Next avvisa sui path relativi appena si aggiunge
+// un'immagine OG. Impostare NEXT_PUBLIC_SITE_URL con il dominio reale —
+// vedi .env.example. Il fallback serve solo per non far fallire il build.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "FD / 01 — Full Stack Web Developer",
   description: "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    title: "FD / 01 — Full Stack Web Developer",
+    description:
+      "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
+  },
+  twitter: {
+    card: "summary",
+    title: "FD / 01 — Full Stack Web Developer",
+    description:
+      "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -51,7 +71,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <BgScene />
         <NavBar />
-        <div className="w-full pl-[52px] lg:pl-[220px]">
+        {/* px di rails e sidebar: `--rail-w` / `--sidebar-w`, stessa fonte della navbar */}
+        <div className="w-full pl-[var(--rail-w)] lg:pl-[var(--sidebar-w)]">
           <div className="max-w-[1180px] mx-auto px-8 w-full relative z-[1] flex flex-col flex-1">
             {children}
           </div>
