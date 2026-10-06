@@ -30,29 +30,13 @@ const jetbrainMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-// In export statico i metadati Open Graph richiedono un base URL assoluto:
-// senza metadataBase Next avvisa sui path relativi appena si aggiunge
-// un'immagine OG. Impostare NEXT_PUBLIC_SITE_URL con il dominio reale —
-// vedi .env.example. Il fallback serve solo per non far fallire il build.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
-
+// Sito non indicizzato su user-site diretto: bastano titolo e descrizione,
+// niente Open Graph/Twitter né base URL (vedi review.md E3).
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: "FD / 01 — Full Stack Web Developer",
+  title: "SYS / 01 — Full Stack Web Developer",
   description: "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
-  openGraph: {
-    type: "website",
-    url: SITE_URL,
-    title: "FD / 01 — Full Stack Web Developer",
-    description:
-      "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
-  },
-  twitter: {
-    card: "summary",
-    title: "FD / 01 — Full Stack Web Developer",
-    description:
-      "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
-  },
+  // Sito non indicizzato per scelta: blocca anche mirror/deploys di anteprima.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

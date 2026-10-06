@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { animate, type JSAnimation } from "animejs";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { TARGETS, pct, wrap360 } from "@/lib/orbital-targets";
 
@@ -19,10 +20,13 @@ export default function HeroOrbital() {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const reduced = usePrefersReducedMotion();
 
-  // Loop a rAF: React disegna solo il primo frame, poi si scrive sul DOM direttamente.
+  // Rotazioni (sweep + 2 anelli) via anime.js; fascio-target e bearing restano
+  // nel loop rAF invariati, come da review (target non toccati).
   useEffect(() => {
     const root = rootRef.current;
     const sweep = sweepRef.current;
+    const ringOuter = ringOuterRef.current;
+    const ringInner = ringInnerRef.current;
     const bearing = bearingRef.current;
     if (!root || !sweep) return;
 
@@ -30,11 +34,44 @@ export default function HeroOrbital() {
     // nessuna rotazione. Il bearing resta al valore iniziale.
     if (reduced) return;
 
+    // Giri continui antiorari, stessi periodi di prima.
+    const spins: JSAnimation[] = [
+      animate(sweep, {
+        rotate: ["0deg", "-360deg"],
+        duration: SWEEP_PERIOD,
+        ease: "linear",
+        loop: true,
+      }),
+    ];
+    if (ringOuter) {
+      spins.push(
+        animate(ringOuter, {
+          rotate: ["0deg", "-360deg"],
+          duration: RING_OUTER_PERIOD,
+          ease: "linear",
+          loop: true,
+        }),
+      );
+    }
+    if (ringInner) {
+      spins.push(
+        animate(ringInner, {
+          rotate: ["0deg", "-360deg"],
+          duration: RING_INNER_PERIOD,
+          ease: "linear",
+          loop: true,
+        }),
+      );
+    }
+
+    // Ferme finché `start()` non le accende insieme al rAF: così sweep
+    // visivo e angolo del fascio (stessa velocità) restano sincroni.
+    spins.forEach((s) => s.pause());
+
     let raf = 0;
     let last = performance.now();
+    // Angolo del fascio: serve solo ai target, le scritte sui nodi le fa anime.js.
     let angle = 0;
-    let outerAngle = 0;
-    let innerAngle = 0;
     let phase = 0;
 
     // Il radar sta solo nell'hero: quando esce dal viewport il loop si ferma,
@@ -44,7 +81,6 @@ export default function HeroOrbital() {
     // Ultimo valore scritto: riscrivere la stessa stringa 60 volte al secondo
     // invalida lo stile senza cambiare nulla.
     const lastBearing = { value: "" };
-    const lastTransform = { sweep: "", outer: "", inner: "" };
     const lastDot = TARGETS.map(() => ({
       opacity: "",
       scale: "",
@@ -65,27 +101,9 @@ export default function HeroOrbital() {
       last = now;
 
       // Avanza sul tempo trascorso, non sul numero di frame: velocità costante.
+      // Stesso passo dello sweep animato, così fascio e target restano sincroni.
       angle = wrap360(angle - (dt * 360) / SWEEP_PERIOD);
-      outerAngle = wrap360(outerAngle - (dt * 360) / RING_OUTER_PERIOD);
-      innerAngle = wrap360(innerAngle - (dt * 360) / RING_INNER_PERIOD);
       phase += dt / 1000;
-
-      // I due anelli ruotano con lo stesso orientamento iniziale, velocità diverse.
-      const sweepT = `rotate(${angle.toFixed(4)}deg)`;
-      if (sweepT !== lastTransform.sweep) {
-        sweep.style.transform = sweepT;
-        lastTransform.sweep = sweepT;
-      }
-      const outerT = `rotate(${wrap360(outerAngle).toFixed(4)}deg)`;
-      if (outerT !== lastTransform.outer && ringOuterRef.current) {
-        ringOuterRef.current.style.transform = outerT;
-        lastTransform.outer = outerT;
-      }
-      const innerT = `rotate(${wrap360(innerAngle).toFixed(4)}deg)`;
-      if (innerT !== lastTransform.inner && ringInnerRef.current) {
-        ringInnerRef.current.style.transform = innerT;
-        lastTransform.inner = innerT;
-      }
 
       const bearingText = `${String(
         Math.round(wrap360(190 + 150 * Math.sin(phase * 0.9))),
@@ -136,15 +154,18 @@ export default function HeroOrbital() {
 
     // Il loop parte e si ferma davvero: prima veniva solo saltato il lavoro
     // dentro `frame`, ma la catena rAF restava attiva per tutta la sessione.
+    // Le rotazioni anime.js seguono lo stesso interruttore (pause/play).
     const start = () => {
       if (raf || !onScreen || document.hidden) return;
       last = performance.now();
       raf = requestAnimationFrame(frame);
+      spins.forEach((s) => s.play());
     };
     const stop = () => {
       if (!raf) return;
       cancelAnimationFrame(raf);
       raf = 0;
+      spins.forEach((s) => s.pause());
     };
 
     const io = new IntersectionObserver(
@@ -165,6 +186,7 @@ export default function HeroOrbital() {
       document.removeEventListener("visibilitychange", onVisibility);
       io.disconnect();
       stop();
+      spins.forEach((s) => s.revert());
     };
   }, [reduced]);
 

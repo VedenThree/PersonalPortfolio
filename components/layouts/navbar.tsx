@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { animate } from "animejs";
 import { goToSection } from "@/lib/section-nav";
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 
 const NAV_ITEMS = [
   { num: "00", label: "Home", id: "hero" },
@@ -66,10 +68,13 @@ function MobileRail({
         onClick={() => goTo("hero")}
         aria-label="Home"
         title="Home"
-        className="mb-8 flex size-7 shrink-0 cursor-pointer items-center justify-center bg-orange"
+        className="mb-8 flex size-7 shrink-0 cursor-pointer items-center justify-center border border-line bg-panel-core"
       >
-        <span className="font-mono text-[11px] font-extrabold leading-none text-white">
-          FD
+        <span
+          aria-hidden
+          className="font-mono text-[10px] font-bold leading-none text-orange"
+        >
+          {">_"}
         </span>
       </button>
 
@@ -112,6 +117,29 @@ export default function NavBar() {
     0,
     NAV_ITEMS.findIndex((n) => n.id === active),
   );
+  const activeItem = NAV_ITEMS[activeIndex] ?? NAV_ITEMS[0];
+  const indicatorRef = useRef<HTMLSpanElement | null>(null);
+  const reduced = usePrefersReducedMotion();
+
+  // L'indicatore scorre con una tween anime.js. Senza JS — o sotto
+  // reduced-motion — resta il posizionamento CSS via --nav-index.
+  useEffect(() => {
+    if (reduced) return;
+    const el = indicatorRef.current;
+    if (!el) return;
+    const rowH =
+      parseFloat(
+        getComputedStyle(el).getPropertyValue("--nav-row-h"),
+      ) || 68;
+    const slide = animate(el, {
+      translateY: activeIndex * rowH,
+      duration: 500,
+      ease: "outExpo",
+    });
+    return () => {
+      slide.revert();
+    };
+  }, [activeIndex, reduced]);
 
   return (
     <>
@@ -120,32 +148,29 @@ export default function NavBar() {
         <aside className="nav-sidebar fixed left-0 top-0 z-50 hidden h-screen w-[var(--sidebar-w)] flex-col bg-ink-deep/90 backdrop-blur-[12px] lg:flex">
         <div className="border-b border-line px-5 pb-5 pt-6">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center bg-orange">
-              <span className="font-mono font-extrabold leading-none text-white">
-                FD
+            <div className="flex size-9 shrink-0 items-center justify-center border border-line bg-panel-core">
+              <span
+                aria-hidden
+                className="font-mono text-[13px] font-bold leading-none text-orange"
+              >
+                {">_"}
               </span>
             </div>
             <div>
               <p className="font-display text-[15px] font-bold uppercase leading-none tracking-[1.5px] text-paper">
-                FD / 01
+                SYS / 01
               </p>
               <p className="mt-1.5 font-mono text-[7.5px] uppercase tracking-[0.9px] text-ice-dim/70">
-                SISTEMA WEB DEV
+                FULL STACK · IT
               </p>
             </div>
           </div>
           <div className="flex items-center justify-between border-t border-ice/10 pt-3">
-            <div className="flex items-end gap-0.5">
-              {[8, 10, 12, 12].map((h, i) => (
-                <div
-                  key={i}
-                  className={`w-[3px] ${i < 3 ? "bg-orange" : "bg-orange/10"}`}
-                  style={{ height: h }}
-                />
-              ))}
-            </div>
             <span className="font-mono text-[7.5px] tracking-[0.7px] text-ice-dim/70">
-              SIGNAL 3/4
+              SEC.{activeItem.num}
+            </span>
+            <span className="font-mono text-[7.5px] uppercase tracking-[0.7px] text-paper/80">
+              {activeItem.label}
             </span>
           </div>
         </div>
@@ -156,10 +181,12 @@ export default function NavBar() {
             className="absolute left-0 top-0 h-full w-px bg-ice/10"
           />
           {/* L'altezza della riga e il passo dell'indicatore vivono entrambe in
-              --nav-row-h: nessuno dei due può divergere. */}
+              --nav-row-h: nessuno dei due può divergere. La tween anime.js
+              legge la stessa variabile, quindi il passo resta quello. */}
           <span
+            ref={indicatorRef}
             aria-hidden
-            className="nav-indicator absolute left-0 top-0 h-[var(--nav-row-h)] w-[2px] bg-orange transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="nav-indicator absolute left-0 top-0 h-[var(--nav-row-h)] w-[2px] bg-orange"
             style={{ "--nav-index": activeIndex } as CSSProperties}
           />
           {NAV_ITEMS.map(({ num, label, id }) => {
@@ -206,18 +233,17 @@ export default function NavBar() {
         </nav>
 
         <div className="border-t border-ice/15 px-5 py-4">
-          <div className="mb-3 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 font-mono text-[8px] tracking-[0.88px] text-ice-dim/80">
-            <span>LAT</span>
-            <span className="text-right">46.2074°N</span>
-            <span>LON</span>
-            <span className="text-right">09.0200°E</span>
-            <span>ALT</span>
-            <span className="text-right">122m ASL</span>
+          <div className="mb-3 flex items-center justify-between font-mono text-[8px] tracking-[0.88px]">
+            <span className="text-ice-dim/50">STACK</span>
+            <span className="text-paper/70">REACT·NEXT·NODE·SQL</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="size-[6px] rounded-full bg-green animate-pulse-glow" />
             <span className="font-mono text-[8px] tracking-[0.88px] text-green">
               ONLINE
+            </span>
+            <span className="ml-auto font-mono text-[8px] tracking-[0.88px] text-ice-dim/70">
+              {String(activeIndex + 1).padStart(2, "0")}/04
             </span>
           </div>
         </div>

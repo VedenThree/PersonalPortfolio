@@ -15,7 +15,7 @@ export default function Footer() {
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-[1px] bg-orange rotate-45" />
             <span className="font-mono text-[12px] tracking-[0.02em] text-paper font-medium">
-              FD / 01
+              SYS / 01
             </span>
           </div>
           <p className="font-mono text-[10px] text-ice-dim">

@@ -17,6 +17,7 @@ import {
 import { createProjectsTour } from "@/lib/projects-tour";
 import { SECTION_EVENTS, onSectionEvent } from "@/lib/section-nav";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
+import { createWriter } from "@/lib/write-if-changed";
 import { cn } from "@/lib/utils";
 
 const HOLD_START = 0.65;
@@ -115,7 +116,7 @@ export default function Projects() {
 
   useEffect(() => {
     // Sotto reduced-motion la sezione resta com'è nel markup: niente pista da
-    // 300vh, niente sticky, niente timeline. Le card sono già visibili perché
+    // 200vh, niente sticky, niente timeline. Le card sono già visibili perché
     // nessuno le ha più nascoste con opacity: 0 (vedi H3 in REVIEW.md).
     if (reduced) return;
 
@@ -127,7 +128,7 @@ export default function Projects() {
     let pinned = false;
     const setPinned = (v: boolean) => {
       pinned = v;
-      runway.style.height = v ? "300vh" : "auto";
+      runway.style.height = v ? "200vh" : "auto";
     };
     setPinned(mq.matches);
 
@@ -279,15 +280,9 @@ export default function Projects() {
     // Il fascio overlay è gestito da <CrtSweep /> dentro Terminal.
 
     // Scroll observer di anime.js: lega la timeline allo scrolling.
-    // Ultimo valore scritto per ogni nodo aggiornato a mano: onUpdate gira a ogni
-    // frame di scroll e riscriverebbe le stesse 6 proprietà anche identiche.
-    const last = {
-      sync: "",
-      status: "",
-      statusColor: "",
-      visibility: "",
-      pointerEvents: "",
-    };
+    // onUpdate gira a ogni frame di scroll: `write` evita di riassegnare
+    // le stesse stringhe quando nulla è cambiato.
+    const write = createWriter();
 
     tl.pause();
     // seek(0) esplicito: senza, il primo render della timeline pausata potrebbe
@@ -313,23 +308,22 @@ export default function Projects() {
         const syncText = `SYNC_${String(
           Math.round(self.progress * 100),
         ).padStart(2, "0")}%`;
-        if (sync && syncText !== last.sync) {
-          sync.textContent = syncText;
-          last.sync = syncText;
+        if (sync) {
+          write("sync", syncText, () => {
+            sync.textContent = syncText;
+          });
         }
 
         const statusEl = h.status();
         if (statusEl) {
           const text = cleared ? "DEPLOYED" : "STANDBY";
-          if (text !== last.status) {
+          write("status", text, () => {
             statusEl.textContent = text;
-            last.status = text;
-          }
+          });
           const color = cleared ? "var(--green)" : "var(--steel)";
-          if (color !== last.statusColor) {
+          write("statusColor", color, () => {
             statusEl.style.color = color;
-            last.statusColor = color;
-          }
+          });
         }
 
         const layerEl = h.layer();
@@ -337,19 +331,17 @@ export default function Projects() {
           // Dopo il clear le righe digitate sono a opacity 0 ma ancora in
           // DOM: nascondile davvero, altrimenti restano "fantasma".
           const visibility = cleared ? "hidden" : "visible";
-          if (visibility !== last.visibility) {
+          write("visibility", visibility, () => {
             layerEl.style.visibility = visibility;
-            last.visibility = visibility;
-          }
+          });
         }
 
         const gridEl = gridRef.current;
         if (gridEl) {
           const pe = cleared ? "auto" : "none";
-          if (pe !== last.pointerEvents) {
+          write("pointerEvents", pe, () => {
             gridEl.style.pointerEvents = pe;
-            last.pointerEvents = pe;
-          }
+          });
         }
       },
     });

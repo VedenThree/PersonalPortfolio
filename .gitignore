@@ -32,8 +32,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-# Il template va versionato: senza, nessuno sa quali variabili esistono.
-!.env.example
 
 # vercel
 .vercel

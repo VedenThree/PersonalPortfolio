@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { animate, type JSAnimation } from "animejs";
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 
 type Particle = {
   id: string;
@@ -35,54 +37,91 @@ const MOTES = makeParticles("mote", 18, (i) => ({
 }));
 
 export default function BgScene() {
-  // 88 elementi animati più un layer aurora con blur e mix-blend: il browser
-  // continua a dipingere anche con la tab in background. Sospendere
-  // animation-play-state quando la tab è nascosta libera quel lavoro.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const auroraRef = useRef<HTMLDivElement | null>(null);
+  const reduced = usePrefersReducedMotion();
+
+  // Tre istanze anime.js al posto di 88 animazioni CSS: stelle, pulviscolo e
+  // alone. Ogni stella/polline tiene la sua durata e il suo ritardo, come
+  // prima con animation-duration/delay inline.
   useEffect(() => {
-    const root = document.documentElement;
+    const root = rootRef.current;
+    if (!root || reduced) return;
+
+    const runs: JSAnimation[] = [
+      animate(root.querySelectorAll("[data-star]"), {
+        opacity: [0.15, 0.9],
+        duration: (_el?: unknown, i?: number) => STARS[i ?? 0].duration * 1000,
+        delay: (_el?: unknown, i?: number) => STARS[i ?? 0].delay * 1000,
+        ease: "inOutSine",
+        loop: true,
+        alternate: true,
+      }),
+      animate(root.querySelectorAll("[data-mote]"), {
+        translateY: ["0px", "-110vh"],
+        duration: (_el?: unknown, i?: number) => MOTES[i ?? 0].duration * 1000,
+        delay: (_el?: unknown, i?: number) => MOTES[i ?? 0].delay * 1000,
+        ease: "linear",
+        loop: true,
+      }),
+    ];
+    if (auroraRef.current) {
+      runs.push(
+        animate(auroraRef.current, {
+          translate: ["0% 0%", "3% 4%"],
+          rotate: [0, 2.5],
+          scale: [1, 1.06],
+          duration: 24000,
+          ease: "inOutSine",
+          loop: true,
+          alternate: true,
+        }),
+      );
+    }
+
+    // La tab in background non deve costare animazioni: pause al posto del
+    // vecchio toggle di `animation-play-state` via classe.
     const onVisibility = () => {
-      root.classList.toggle("scene-paused", document.hidden);
+      runs.forEach((r) => (document.hidden ? r.pause() : r.play()));
     };
-    onVisibility();
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      root.classList.remove("scene-paused");
+      runs.forEach((r) => r.revert());
     };
-  }, []);
+  }, [reduced]);
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    <div ref={rootRef} className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
       <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--bg-deep)_0%,var(--bg)_45%,var(--bg)_100%)]" />
       <div
-        className="absolute w-[150%] h-[65%] -top-[15%] -left-[25%] opacity-40 animate-aurora will-change-transform mix-blend-screen blur-[70px] bg-[radial-gradient(ellipse_at_28%_30%,color-mix(in_srgb,var(--ice)_55%,transparent),transparent_60%),radial-gradient(ellipse_at_68%_42%,color-mix(in_srgb,var(--orange)_28%,transparent),transparent_55%),radial-gradient(ellipse_at_48%_62%,color-mix(in_srgb,var(--olive)_40%,transparent),transparent_60%)]"
+        ref={auroraRef}
+        className="absolute w-[150%] h-[65%] -top-[15%] -left-[25%] opacity-40 will-change-transform mix-blend-screen blur-[70px] bg-[radial-gradient(ellipse_at_28%_30%,color-mix(in_srgb,var(--ice)_55%,transparent),transparent_60%),radial-gradient(ellipse_at_68%_42%,color-mix(in_srgb,var(--orange)_28%,transparent),transparent_55%),radial-gradient(ellipse_at_48%_62%,color-mix(in_srgb,var(--olive)_40%,transparent),transparent_60%)]"
       />
       <div id="particles" className="absolute inset-0">
         {STARS.map((s) => (
           <span
             key={s.id}
-            className="absolute rounded-full bg-paper animate-twinkle"
+            data-star
+            className="absolute rounded-full bg-paper"
             style={{
               top: `${s.top}%`,
               left: `${s.left}%`,
               width: s.size,
               height: s.size,
-              animationDuration: `${s.duration}s`,
-              animationDelay: `${s.delay}s`,
             }}
           />
         ))}
         {MOTES.map((m) => (
           <span
             key={m.id}
-            className="absolute rounded-full bg-ice opacity-50 animate-drift"
+            data-mote
+            className="absolute rounded-full bg-ice opacity-50"
             style={{
               left: `${m.left}%`,
               bottom: `${m.bottom}%`,
               width: m.size,
               height: m.size,
-              animationDuration: `${m.duration}s`,
-              animationDelay: `${m.delay}s`,
             }}
           />
         ))}
