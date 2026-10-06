@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Reveal from "@/components/animations/reveal";
 import CrtSweep from "@/components/ui/CrtSweep";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+// Chiave Web3Forms: incollala qui (dashboard web3forms.com → Access Key).
+// Finché resta vuota, "Invia messaggio" usa il fallback mailto:.
+const WEB3FORMS_KEY = "160b26d7-497a-4191-8048-f89970babcfe";
 
 // Un solo indirizzo: prima la mailto e la riga della console ne avevano due
 // copie indipendenti.
@@ -26,16 +30,16 @@ const DETAILS = [
     color: "var(--ice)",
   },
   {
-    prompt: "COORDINATES",
-    value: "46.2074° N · 9.0200° E",
-    res: "REMOTE",
-    color: "var(--ice)",
+    prompt: "STATUS",
+    value: "Disponibile per nuovi progetti",
+    res: "OPEN",
+    color: "var(--green)",
   },
 ];
 
 const FIELDS = [
   {
-    label: "NOME_OPERATIVO",
+    label: "Nome",
     name: "nome",
     placeholder: "Alex Rossi",
     type: "text",
@@ -43,7 +47,7 @@ const FIELDS = [
     multiline: false,
   },
   {
-    label: "CANALE_EMAIL",
+    label: "Email",
     name: "email",
     placeholder: "alex@example.com",
     type: "email",
@@ -51,31 +55,27 @@ const FIELDS = [
     multiline: false,
   },
   {
-    label: "MESSAGGIO",
+    label: "Messaggio",
     name: "messaggio",
-    placeholder: "Descrivi il progetto o la collaborazione...",
+    placeholder: "Ciao! Vorrei rifare il sito del mio studio entro marzo…",
     multiline: true,
   },
 ] as const;
 
-type Status = "idle" | "sent";
+type Status = "idle" | "sending" | "sent" | "error";
+type SentVia = "direct" | "mailto";
 
 export default function Contact() {
   const [status, setStatus] = useState<Status>("idle");
+  const [sentVia, setSentVia] = useState<SentVia>("direct");
+  const [lastContact, setLastContact] = useState({ nome: "", email: "" });
+  const successRef = useRef<HTMLDivElement>(null);
 
-  // Il sito è un export statico: non c'è un endpoint a cui fare POST.
-  // "Trasmetti" lascia la validazione al browser (niente noValidate: se un campo
-  // è vuoto il submit non parte nemmeno) e apre il client di posta con il
-  // messaggio già composto.
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
+  useEffect(() => {
+    if (status === "sent") successRef.current?.focus();
+  }, [status]);
 
-    const data = new FormData(form);
-    const nome = String(data.get("nome") ?? "").trim();
-    const email = String(data.get("email") ?? "").trim();
-    const messaggio = String(data.get("messaggio") ?? "").trim();
-
+  const openMailto = (nome: string, email: string, messaggio: string) => {
     const subject = `Portfolio // ${nome || "nuovo contatto"}`;
     const body = [`Nome: ${nome}`, `Email: ${email}`, "", messaggio].join("\n");
 
@@ -87,8 +87,55 @@ export default function Contact() {
       )}`,
       "_self",
     );
-    setStatus("sent");
   };
+
+  // Il sito è un export statico: l'invio passa da Web3Forms (POST esterna,
+  // niente backend proprio). La validazione resta al browser (niente
+  // noValidate: se un campo è vuoto il submit non parte nemmeno).
+  // Senza chiave — o se la POST fallisce — si ricade sul client di posta.
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+
+    const data = new FormData(form);
+    const nome = String(data.get("nome") ?? "").trim();
+    const email = String(data.get("email") ?? "").trim();
+    const messaggio = String(data.get("messaggio") ?? "").trim();
+
+    if (!WEB3FORMS_KEY) {
+      openMailto(nome, email, messaggio);
+      setLastContact({ nome, email });
+      setSentVia("mailto");
+      setStatus("sent");
+      return;
+    }
+
+    setStatus("sending");
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          name: nome,
+          email,
+          message: messaggio,
+          subject: `Portfolio // ${nome || "nuovo contatto"}`,
+        }),
+      });
+      const json = (await res.json()) as { success?: boolean };
+      if (!res.ok || !json.success) throw new Error("Web3Forms error");
+      setLastContact({ nome, email });
+      setSentVia("direct");
+      form.reset();
+      setStatus("sent");
+    } catch {
+      openMailto(nome, email, messaggio);
+      setStatus("error");
+    }
+  };
+
+  const resetForm = () => setStatus("idle");
 
   return (
     <Reveal delay={200}>
@@ -128,7 +175,8 @@ export default function Contact() {
                   SYS // CONTATTI
                 </p>
               </div>
-              <span className="font-mono text-[10px] tracking-[0.2em] text-green shrink-0">
+              <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-green shrink-0">
+                <span className="size-[6px] rounded-full bg-green animate-pulse-glow" />
                 ONLINE
               </span>
             </div>
@@ -144,7 +192,7 @@ export default function Contact() {
                   </span>
                 </p>
               ))}
-              <p className="m-0 mt-2 border-t border-panel-line pt-2.5 text-[11px] tracking-[0.1em] text-ink-faint">
+              <p className="m-0 mt-2 border-t border-panel-line pt-2.5 text-xs tracking-[0.1em] text-ink-faint">
                 ENCRYPTION · TLS 1.3 // END-TO-END
               </p>
             </div>
@@ -170,17 +218,90 @@ export default function Contact() {
             </span>
           ))}
 
-          <p className="font-mono text-[10px] text-orange tracking-[2.22px] uppercase mb-5">
-            {"// TRASMETTI MESSAGGIO"}
+          <h3 className="font-display font-bold text-xl text-paper tracking-[-0.01em] leading-tight mb-2">
+            Inviami un messaggio
+          </h3>
+          <p className="font-sans text-[14px] text-paper-dim leading-[1.7] mb-6 max-w-[420px]">
+            Raccontami cosa vuoi realizzare. Ti rispondo entro 24 ore,
+            in orario CET.
           </p>
+          {status === "sent" ? (
+            <div
+              ref={successRef}
+              tabIndex={-1}
+              role="status"
+              aria-live="polite"
+              className="border border-green/40 rounded bg-green/10 px-5 py-6 outline-none"
+            >
+              <div className="flex items-start gap-3.5">
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-6 shrink-0 text-green mt-0.5"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m8.5 12.5 2.5 2.5 5-5.5" />
+                </svg>
+                <div className="min-w-0">
+                  <p className="font-display font-bold text-lg text-paper leading-tight mb-1.5">
+                    {sentVia === "mailto"
+                      ? "Si è aperto il tuo programma di posta"
+                      : "Messaggio inviato"}
+                  </p>
+                  <p className="font-sans text-[14px] text-paper-dim leading-[1.7] mb-1">
+                    {sentVia === "mailto" ? (
+                      <>
+                        Ho già compilato oggetto e testo
+                        {lastContact.nome ? ` per ${lastContact.nome}` : ""}.
+                        Premi <strong className="text-paper font-semibold">Invia</strong> lì
+                        per completare: ti rispondo entro 24 ore, in orario CET.
+                      </>
+                    ) : (
+                      <>
+                        Grazie{lastContact.nome ? ` ${lastContact.nome}` : ""}:
+                        l&apos;ho ricevuto
+                        {lastContact.email ? ` e ti rispondo a ${lastContact.email}` : ""}{" "}
+                        entro 24 ore, in orario CET.
+                      </>
+                    )}
+                  </p>
+                  <p className="font-mono text-xs text-ink-mid tracking-[0.06em] mb-5">
+                    Preferisci la mail diretta?{" "}
+                    <a
+                      href={MAILTO}
+                      className="text-orange underline underline-offset-4 hover:opacity-80"
+                    >
+                      {EMAIL}
+                    </a>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={resetForm}
+                  >
+                    Invia un altro messaggio
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             {FIELDS.map((f) => (
               <div key={f.name}>
                 <label
                   htmlFor={f.name}
-                  className="font-mono text-[9.6px] text-ink-mid tracking-[1.34px] uppercase mb-1.5 block"
+                  className="font-mono text-xs text-ink-title tracking-[0.08em] uppercase mb-2 block"
                 >
-                  [{f.label}]
+                  {f.label}{" "}
+                  <span className="text-ink-faint normal-case tracking-normal">
+                    · obbligatorio
+                  </span>
                 </label>
                 {f.multiline ? (
                   <Textarea
@@ -188,6 +309,7 @@ export default function Contact() {
                     name={f.name}
                     placeholder={f.placeholder}
                     required
+                    disabled={status === "sending"}
                     minLength={10}
                     maxLength={4000}
                     rows={5}
@@ -201,30 +323,50 @@ export default function Contact() {
                     autoComplete={f.autoComplete}
                     placeholder={f.placeholder}
                     required
+                    disabled={status === "sending"}
                     maxLength={120}
                     className="bg-field border-panel-line py-2.5 text-[14px] placeholder:text-ice/25 focus:border-orange/60"
                   />
                 )}
               </div>
             ))}
-            <div className="flex items-center gap-4">
-              <Button type="submit">
-                Trasmetti{" "}
-                <span className="inline-block transition-transform duration-200 group-hover:translate-x-[3px]">
-                  ▸
-                </span>
+            {status === "error" && (
+              <div
+                role="alert"
+                className="border border-orange/40 rounded bg-orange/10 px-4 py-3.5"
+              >
+                <p className="font-sans text-[14px] text-paper leading-[1.6] mb-1">
+                  L&apos;invio diretto non è riuscito, ma ho già aperto il tuo
+                  programma di posta con il messaggio pronto.
+                </p>
+                <p className="font-sans text-[13px] text-paper-dim leading-[1.6]">
+                  Completa l&apos;invio lì, oppure scrivimi a{" "}
+                  <a
+                    href={MAILTO}
+                    className="text-orange underline underline-offset-4 hover:opacity-80"
+                  >
+                    {EMAIL}
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <Button type="submit" disabled={status === "sending"}>
+                {status === "sending" ? "Invio in corso…" : "Invia messaggio"}
               </Button>
               <p
                 role="status"
                 aria-live="polite"
-                className="font-mono text-[9px] text-ice-dim tracking-[1px] uppercase"
+                className="font-mono text-xs text-ink-mid tracking-[0.04em]"
               >
-                {status === "sent"
-                  ? "Client di posta aperto — invia per confermare"
-                  : "Risposta < 24h · Orario CET"}
+                {status === "sending"
+                  ? "Invio in corso, attendi qualche secondo…"
+                  : "Rispondo entro 24 ore · Orario CET"}
               </p>
             </div>
           </form>
+          )}
         </div>
         </div>
       </section>
