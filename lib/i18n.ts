@@ -15,16 +15,24 @@ export type Locale = "it" | "en";
 
 export const LOCALES: readonly Locale[] = ["it", "en"];
 
-/** Dal pathname alla lingua: `/en` ed `/en/` sono inglesi, il resto italiano. */
+/**
+ * Prefisso di deploy (Project Pages). Stessa stringa di `basePath` in
+ * next.config.ts: Next prefissa da solo gli asset generati, ma i link scritti
+ * a mano (switcher lingua) devono farlo qui.
+ */
+export const BASE_PATH = "/PersonalPortfolio";
+
+/** Dal pathname alla lingua: vale con o senza prefisso (`/en` e
+ * `/PersonalPortfolio/en/` sono entrambi inglesi). */
 export function localeFromPathname(pathname: string | null): Locale {
   if (!pathname) return "it";
-  return pathname === "/en" || pathname.startsWith("/en/") ? "en" : "it";
+  return /(^|\/)en(\/|$)/.test(pathname) ? "en" : "it";
 }
 
 /** Destinazione dello switcher: slash finale perché l'host statico senza
  * rewrite risolve solo `/en/index.html`, non `/en`. */
 export function localePath(locale: Locale): string {
-  return locale === "en" ? "/en/" : "/";
+  return `${BASE_PATH}${locale === "en" ? "/en/" : "/"}`;
 }
 
 export type Dict = {

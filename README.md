@@ -45,4 +45,4 @@ lib/
 ## Note
 
 - Solo tema scuro, nessun toggle.
-- Deploy: contenuto di `out/` su qualsiasi host statico, nessuna funzione server.
+- Deploy: GitHub Pages via Actions (`.github/workflows/deploy.yml`) su `VedenThree.github.io/PersonalPortfolio/` — nel repo: Settings → Pages → Source: GitHub Actions.
