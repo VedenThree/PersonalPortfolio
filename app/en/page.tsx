@@ -5,29 +5,31 @@ import Profile from "@/components/sections/profile";
 import Contact from "@/components/sections/contact";
 import Footer from "@/components/layouts/footer";
 import SectionFlow from "@/components/animations/section-flow";
+import HtmlLang from "@/components/ui/html-lang";
 import { DICTS } from "@/lib/i18n";
 
-// Versione italiana (default): i metadata vivono qui e non più nel layout,
-// così `/en` può avere i suoi senza conflitti.
+// Versione inglese: stessa composizione della home italiana, dizionario `en`.
+// Con `trailingSlash: true` la build emette `/en/index.html`, che un host
+// statico serve senza rewrite.
 export const metadata: Metadata = {
   title: "SYS / 01 — Junior Web & Mobile App Developer",
   description:
-    "Portfolio di uno Junior Web & Mobile App Developer con focus sul frontend moderno: React, Next.js, TypeScript, Tailwind CSS e capacità di trasformare design Figma in interfacce web funzionanti.",
-  // Sito non indicizzato per scelta: blocca anche mirror/deploys di anteprima.
+    "Portfolio of a Junior Web & Mobile App Developer focused on modern frontend: React, Next.js, TypeScript, Tailwind CSS and the ability to turn Figma designs into working web interfaces.",
   robots: { index: false, follow: false },
 };
 
-export default function Home() {
-  const dict = DICTS.it;
+export default function HomeEn() {
+  const dict = DICTS.en;
   return (
     <main className="flex flex-1 flex-col">
+      <HtmlLang lang="en" />
       <Hero dict={dict.hero} />
-      <Projects dict={dict.projects} locale="it" />
+      <Projects dict={dict.projects} locale="en" />
       <SectionFlow
         a={<Profile dict={dict.profile} />}
         b={<Contact dict={dict.contact} />}
       />
-      <Footer dict={dict.footer} locale="it" />
+      <Footer dict={dict.footer} locale="en" />
     </main>
   );
 }

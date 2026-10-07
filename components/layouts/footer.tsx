@@ -1,13 +1,21 @@
 import Reveal from "@/components/animations/reveal";
 import NavLink from "@/components/ui/nav-link";
+import LangSwitch from "@/components/ui/lang-switch";
+import type { Dict, Locale } from "@/lib/i18n";
 
 const LINKS = [
-  { section: "lavori", label: "Progetti" },
-  { section: "profilo", label: "Profilo" },
-  { section: "contatti", label: "Contatti" },
+  { section: "lavori" },
+  { section: "profilo" },
+  { section: "contatti" },
 ] as const;
 
-export default function Footer() {
+export default function Footer({
+  dict,
+  locale,
+}: {
+  dict: Dict["footer"];
+  locale: Locale;
+}) {
   return (
     <Reveal delay={300}>
       <footer className="border-t border-line py-10">
@@ -19,21 +27,27 @@ export default function Footer() {
             </span>
           </div>
           <p className="font-mono text-[10px] text-ice-dim">
-            <span className="text-orange">◈</span> Codice, sistemi, dati ·{" "}
-            <span className="text-paper/60">Italia</span>
+            <span className="text-orange">◈</span> {dict.tagline} ·{" "}
+            <span className="text-paper/60">{dict.country}</span>
           </p>
-          <nav aria-label="Collegamenti di piede">
-          <ul className="flex gap-6 list-none">
-            {LINKS.map(({ section, label }) => (
+          <nav aria-label={dict.navLabel}>
+          {/* flex-wrap: a 320px i tre link in riga unica non ci stavano e
+              producevano scroll orizzontale. py-2 li porta a ~32px di altezza. */}
+          <ul className="flex flex-wrap justify-center gap-x-6 gap-y-1 list-none">
+            {LINKS.map(({ section }) => (
               <li key={section}>
                 <NavLink
                   section={section}
-                  className="font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
+                  className="inline-block py-2 font-mono text-[12px] text-ice-dim hover:text-orange transition-colors"
                 >
-                  {label}
+                  {dict.links[section]}
                 </NavLink>
               </li>
             ))}
+            {/* Switcher di lingua: stesso controllo della navbar. */}
+            <li>
+              <LangSwitch locale={locale} />
+            </li>
           </ul>
         </nav>
         </div>

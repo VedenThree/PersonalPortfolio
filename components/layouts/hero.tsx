@@ -1,11 +1,12 @@
 import NavLink from "@/components/ui/nav-link";
 import HeroOrbital from "@/components/ui/HeroOrbital";
+import type { Dict } from "@/lib/i18n";
 
 const TAGS = ["FRONTEND", "REACT", "NEXT.JS"] as const;
 
-export default function Hero() {
+export default function Hero({ dict }: { dict: Dict["hero"] }) {
   return (
-    <section id="hero" className="relative grid grid-cols-1 md:grid-cols-[1.25fr_0.9fr] items-start gap-14 py-24 pb-[100px]">
+    <section id="hero" className="relative grid grid-cols-1 md:grid-cols-[1.25fr_0.9fr] items-start gap-8 md:gap-14 py-16 sm:py-24 pb-16 sm:pb-[100px]">
       <div>
         <div className="flex flex-wrap gap-7 mb-[38px] font-mono text-[12px] text-ice-dim">
           {TAGS.map((tag) => (
@@ -19,16 +20,13 @@ export default function Hero() {
         </div>
 
         <h1 className="font-display font-bold text-[clamp(36px,4.6vw,66px)] leading-[1.04] tracking-[-0.01em] text-paper">
-          Sviluppo web, un{" "}
-          <span className="text-orange">sistema</span> alla volta.
+          {dict.titleA}{" "}
+          <span className="text-orange">{dict.titleAccent}</span>{" "}
+          {dict.titleB}
         </h1>
 
         <p className="mt-9 max-w-[440px] text-base text-paper-dim">
-          Junior Web & Mobile App Developer con focus sul frontend moderno,
-          esperienza pratica con React, Next.js, TypeScript e Tailwind CSS, e
-          capacità di trasformare design Figma in interfacce web funzionanti.
-          Esperienza complementare nello sviluppo React Native, nell&apos;integrazione
-          di API e nella gestione di database con SQLite e MySQL.
+          {dict.intro}
         </p>
 
         <div className="mt-10 flex flex-wrap gap-4">
@@ -36,7 +34,7 @@ export default function Hero() {
             section="lavori"
             className="group inline-flex items-center gap-2.5 relative border border-orange font-mono text-[12px] px-[26px] py-3.5 text-orange transition-all duration-200 hover:bg-orange hover:text-ink [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
           >
-            Vedi i progetti{" "}
+            {dict.ctaProjects}{" "}
             <span className="inline-block transition-transform duration-200 group-hover:translate-y-[3px]">
               ↓
             </span>
@@ -45,12 +43,16 @@ export default function Hero() {
             section="contatti"
             className="inline-flex items-center gap-2.5 relative border border-line font-mono text-[12px] px-[26px] py-3.5 text-paper-dim transition-all duration-200 hover:border-ice hover:text-ice [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,10px_100%,0_calc(100%_-_10px))]"
           >
-            Contatti
+            {dict.ctaContact}
           </NavLink>
         </div>
       </div>
 
-      <div>
+      {/* Sotto md il radar esce dai gutter (-mx combacia col px del
+          contenitore): a 375px prende 331px invece di 259px, e il nucleo
+          centrale smette di essere un cerchio da 62px con tre righe di testo
+          dentro. Da md in su resta nella sua colonna. */}
+      <div className="-mx-5 sm:-mx-8 md:mx-0">
         <HeroOrbital />
       </div>
     </section>

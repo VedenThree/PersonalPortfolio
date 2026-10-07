@@ -11,9 +11,11 @@ import {
   STATUS_META,
   VISIBLE_PROJECTS,
   moduleName,
+  projectDesc,
   projectNum,
   type Project,
 } from "@/lib/projects-data";
+import type { Dict, Locale } from "@/lib/i18n";
 import { createProjectsTour } from "@/lib/projects-tour";
 import { SECTION_EVENTS, onSectionEvent } from "@/lib/section-nav";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
@@ -92,7 +94,13 @@ function ASCIIProgressBar({ p }: { p: Project }) {
   );
 }
 
-export default function Projects() {
+export default function Projects({
+  dict,
+  locale,
+}: {
+  dict: Dict["projects"];
+  locale: Locale;
+}) {
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const syncRef = useRef<HTMLSpanElement | null>(null);
   const terminalRef = useRef<TerminalHandle | null>(null);
@@ -396,7 +404,7 @@ export default function Projects() {
               </span>
             </div>
             <h2 className="font-display text-[clamp(28px,3.5vw,48px)] font-bold text-paper leading-[1.04]">
-              Progetti
+              {dict.title}
             </h2>
           </div>
 
@@ -424,15 +432,13 @@ export default function Projects() {
                   // ~0.16U) si ridisegna senza problemi.
                   className="h-full"
                 >
-                  <button
-                    type="button"
-                    aria-pressed={selected === p.id}
-                    aria-label={`Apri progetto ${p.title}`}
-                    onClick={() => handleSelect(p)}
+                  {/* Contenitore non interattivo: dentro convivono il bottone di
+                      selezione e i link veri. Un anchor dentro un button
+                      sarebbe HTML non valido, quindi stanno affiancati. */}
+                  <div
                     className={cn(
-                      "group relative flex h-full w-full cursor-pointer select-none flex-col border p-5 text-left font-mono transition-colors duration-300",
-                      "hover:border-orange/40 active:translate-y-[1px]",
-                      "focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2",
+                      "group relative flex h-full w-full flex-col border p-5 font-mono transition-colors duration-300",
+                      "hover:border-orange/40",
                       "rounded-[2px]",
                       selected === p.id
                         ? "border-orange/70 bg-orange/5"
@@ -459,67 +465,104 @@ export default function Projects() {
                       </span>
                     ))}
 
-                    {/* Header row */}
-                    <div className="flex items-baseline gap-2 border-b border-panel-rule pb-3 mb-3">
-                      <span className="text-[15px] font-bold text-orange">
-                        {projectNum(p)}
-                      </span>
-                      <h3 className="font-display min-w-0 flex-1 truncate text-[15px] font-bold uppercase tracking-[0.08em] text-paper-bright">
-                        {selected === p.id && (
-                          <span className="text-orange">▸ </span>
-                        )}
-                        {p.title}
-                      </h3>
-                      <span
-                        className={cn(
-                          "whitespace-nowrap border px-2 py-1 text-[9px] tracking-[0.12em]",
-                          STATUS_META[p.status].chip,
-                        )}
-                      >
-                        {p.status}
-                      </span>
-                    </div>
-
-                    {/* Body rows */}
-                    <div className="flex flex-1 flex-col gap-2">
-                      <p className="m-0 text-[13px] leading-[1.7]">
-                        <PromptHead label="DESC" />
-                        <span className="text-ink-value">
-                          {p.desc || "[ ---- DATI_IN_CODA ---- ]"}
+                    {/* Selezione: evidenzia la card e scrive l'echo in console. */}
+                    <button
+                      type="button"
+                      aria-pressed={selected === p.id}
+                      aria-label={`${dict.openProject} ${p.title}`}
+                      onClick={() => handleSelect(p)}
+                      className="flex w-full flex-1 cursor-pointer select-none flex-col text-left active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange focus-visible:outline-offset-2"
+                    >
+                      {/* Header row */}
+                      <div className="flex items-baseline gap-2 border-b border-panel-rule pb-3 mb-3">
+                        <span className="text-[15px] font-bold text-orange">
+                          {projectNum(p)}
                         </span>
-                      </p>
-                      <p className="m-0 text-[13px] leading-[1.7]">
-                        <PromptHead label="TAGS" />
-                        {p.tags.length > 0 ? (
-                          p.tags.map((t) => (
-                            <span key={t} className="text-ink-tag">
-                              [{t}]
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-ink-dim">[EMPTY]</span>
-                        )}
-                      </p>
-                      <ASCIIProgressBar p={p} />
-                    </div>
+                        <h3 className="font-display min-w-0 flex-1 truncate text-[15px] font-bold uppercase tracking-[0.08em] text-paper-bright">
+                          {selected === p.id && (
+                            <span className="text-orange">▸ </span>
+                          )}
+                          {p.title}
+                        </h3>
+                        <span
+                          className={cn(
+                            "whitespace-nowrap border px-2 py-1 text-[9px] tracking-[0.12em]",
+                            STATUS_META[p.status].chip,
+                          )}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
 
-                    {/* Footer row */}
+                      {/* Body rows */}
+                      <div className="flex flex-1 flex-col gap-2">
+                        <p className="m-0 text-[13px] leading-[1.7]">
+                          <PromptHead label="DESC" />
+                          <span className="text-ink-value">
+                            {projectDesc(p, locale) || dict.fallbackDesc}
+                          </span>
+                        </p>
+                        <p className="m-0 text-[13px] leading-[1.7]">
+                          <PromptHead label="TAGS" />
+                          {p.tags.length > 0 ? (
+                            p.tags.map((t) => (
+                              <span key={t} className="text-ink-tag">
+                                [{t}]
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-ink-dim">[EMPTY]</span>
+                          )}
+                        </p>
+                        <ASCIIProgressBar p={p} />
+                      </div>
+                    </button>
+
+                    {/* Footer row: link veri quando il progetto li ha, altrimenti
+                        l'indicatore di selezione. GITHUB/LIVE uguali in entrambe
+                        le lingue: sono sigle, non frasi. */}
                     <div className="mt-3 flex items-center justify-between border-t border-panel-rule pt-3 text-[11px]">
                       <span className="text-ink-dim tracking-[0.12em]">
                         {p.missionId}
                       </span>
-                      <span
-                        className={cn(
-                          "font-bold tracking-[0.1em] transition-colors duration-300",
-                          selected === p.id
-                            ? "text-green"
-                            : "text-orange group-hover:underline",
+                      <span className="flex items-center gap-3">
+                        {p.githubUrl && (
+                          <a
+                            href={p.githubUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`${dict.githubAria} ${p.title} ${dict.newTab}`}
+                            className="font-bold tracking-[0.1em] text-orange hover:underline"
+                          >
+                            GITHUB ↗
+                          </a>
                         )}
-                      >
-                        {selected === p.id ? "[ OPENED ]" : "OPEN ▸"}
+                        {p.liveUrl && (
+                          <a
+                            href={p.liveUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`${dict.liveAria} ${p.title} ${dict.newTab}`}
+                            className="font-bold tracking-[0.1em] text-orange hover:underline"
+                          >
+                            LIVE ↗
+                          </a>
+                        )}
+                        {!p.githubUrl && !p.liveUrl && (
+                          <span
+                            className={cn(
+                              "font-bold tracking-[0.1em] transition-colors duration-300",
+                              selected === p.id
+                                ? "text-green"
+                                : "text-orange group-hover:underline",
+                            )}
+                          >
+                            {selected === p.id ? "[ OPENED ]" : "OPEN ▸"}
+                          </span>
+                        )}
                       </span>
                     </div>
-                  </button>
+                  </div>
                 </div>
               ))}
 
@@ -539,8 +582,7 @@ export default function Projects() {
             className="mt-10 border-t border-line pt-6 font-mono text-[11px] text-ice-dim"
           >
             <p>
-              <span className="text-orange">&gt;</span> ROSTER in
-              aggiornamento: nuovi deployment in fase di catalogazione.
+              <span className="text-orange">&gt;</span> {dict.roster}
             </p>
           </div>
         </div>

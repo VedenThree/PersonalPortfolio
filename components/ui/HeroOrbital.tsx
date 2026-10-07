@@ -197,7 +197,7 @@ export default function HeroOrbital() {
   return (
     <div
       ref={rootRef}
-      className="bg-panel-ghost relative rounded-[8px] w-full max-w-130 aspect-square overflow-clip"
+      className="bg-panel-ghost relative rounded-[8px] w-full max-w-130 aspect-square overflow-clip @container"
     >
       {/* Griglia di sfondo */}
       <div className="absolute inset-0 flex flex-col justify-between p-5 pointer-events-none opacity-30">
@@ -261,11 +261,20 @@ export default function HeroOrbital() {
       {/* Nucleo centrale: 110/460 = 23.91% — testo sempre alla sua dimensione reale, mai scalato */}
       <div className="absolute inset-0 m-auto" style={{ width: pct(110), height: pct(110) }}>
         <div className="bg-panel-core border-2 border-orange rounded-full size-full flex flex-col items-center justify-center">
-          <p className="font-jet text-[12px] text-orange">SECTOR_CORE</p>
-          <p ref={bearingRef} className="font-jet font-black text-[15px] tabular-nums text-paper-cool">
+          {/* HUD fluido col box: le scritte sono in `cqi` (1% della larghezza
+              del radar, che è il container) così restano proporzionate al
+              cerchio a ogni dimensione — a 520px valgono quanto i 12/15/8px
+              di prima, a 276px scalano da sole senza mai uscire dal bordo.
+              Il cerchio non si tocca: il testo resta nitido a dimensione
+              calcolata, non riscalato come bitmap. */}
+          <p className="font-jet text-orange text-[2.3cqi]">SECTOR_CORE</p>
+          <p
+            ref={bearingRef}
+            className="font-jet font-black tabular-nums text-paper-cool text-[2.9cqi]"
+          >
             000°
           </p>
-          <p className="font-jet text-[8px] text-green">SYS_READY</p>
+          <p className="font-jet text-green text-[1.5cqi]">SYS_READY</p>
         </div>
       </div>
 

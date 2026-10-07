@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { usePathname } from "next/navigation";
 import { animate, type JSAnimation } from "animejs";
 import { goToSection } from "@/lib/section-nav";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
+import LangSwitch from "@/components/ui/lang-switch";
+import {
+  DICTS,
+  localeFromPathname,
+  type Dict,
+  type Locale,
+} from "@/lib/i18n";
 
+// Stesse voci e stessi id in entrambe le lingue: gli anchor (`#lavori`…)
+// sono invisibili, quindi non si traducono. Le etichette sì, dal dizionario.
 const NAV_ITEMS = [
-  { num: "00", label: "Home", id: "hero" },
-  { num: "01", label: "Progetti", id: "lavori" },
-  { num: "02", label: "Profilo", id: "profilo" },
-  { num: "03", label: "Contatti", id: "contatti" },
+  { num: "00", id: "hero" },
+  { num: "01", id: "lavori" },
+  { num: "02", id: "profilo" },
+  { num: "03", id: "contatti" },
 ] as const;
 
 function useNavScroll() {
@@ -57,18 +67,23 @@ function useNavScroll() {
 function MobileRail({
   active,
   goTo,
+  nav,
+  locale,
 }: {
   active: string;
   goTo: (id: string) => void;
+  nav: Dict["nav"];
+  locale: Locale;
 }) {
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-[var(--rail-w)] flex-col items-center border-r border-line bg-ink-deep/90 py-5 lg:hidden">
-      {/* Marchio: torna alla sezione attiva, non a una destinazione diversa */}
+      {/* Marchio: torna alla sezione attiva, non a una destinazione diversa.
+          44px anche qui: sotto i 44 non è un tap target, è un'inezia. */}
       <button
         onClick={() => goTo("hero")}
-        aria-label="Home"
-        title="Home"
-        className="mb-8 flex size-7 shrink-0 cursor-pointer items-center justify-center border border-line bg-panel-core"
+        aria-label={nav.home}
+        title={nav.home}
+        className="mb-6 flex size-11 shrink-0 cursor-pointer items-center justify-center border border-line bg-panel-core"
       >
         <span
           aria-hidden
@@ -78,19 +93,22 @@ function MobileRail({
         </span>
       </button>
 
-      <nav className="flex flex-1 flex-col items-center gap-6">
-        {NAV_ITEMS.map(({ num, label, id }) => {
+      {/* Ogni voce è larga quanto il rail e alta 44px: il dito ci sta.
+          gap-2 perché il padding verticale della riga fa già da spazio. */}
+      <nav className="flex flex-1 flex-col items-center gap-2">
+        {NAV_ITEMS.map(({ num, id }) => {
           const isActive = active === id;
           return (
             <button
               key={id}
               onClick={() => goTo(id)}
-              aria-label={label}
-              className={`flex cursor-pointer flex-col items-center gap-1.5 transition-colors ${
+              aria-label={nav.items[id]}
+              aria-current={isActive ? "true" : undefined}
+              className={`flex w-full cursor-pointer flex-col items-center gap-1.5 py-3 transition-colors ${
                 isActive ? "text-orange" : "text-ice-dim/40 hover:text-ice"
               }`}
             >
-              <span className="font-mono text-[9px] leading-none tracking-[1px]">
+              <span className="font-mono text-[11px] leading-none tracking-[1px]">
                 {num}
               </span>
               <span
@@ -103,6 +121,9 @@ function MobileRail({
         })}
       </nav>
 
+      {/* Switcher di lingua: controllo segmentato, si vede da lontano. */}
+      <LangSwitch locale={locale} orientation="col" className="mb-4 w-full" />
+
       <div
         className="size-[6px] shrink-0 rounded-full bg-green animate-pulse-glow"
         title="Online"
@@ -113,6 +134,11 @@ function MobileRail({
 
 export default function NavBar() {
   const { active, goTo } = useNavScroll();
+  // La lingua si legge dal pathname: la navbar vive nel layout condiviso,
+  // quindi non riceve prop dalla pagina. `/en` ed `/en/` sono inglesi.
+  const pathname = usePathname();
+  const locale = localeFromPathname(pathname);
+  const dict = DICTS[locale];
   const activeIndex = Math.max(
     0,
     NAV_ITEMS.findIndex((n) => n.id === active),
@@ -180,7 +206,7 @@ export default function NavBar() {
               SEC.{activeItem.num}
             </span>
             <span className="font-mono text-[7.5px] uppercase tracking-[0.7px] text-paper/80">
-              {activeItem.label}
+              {dict.nav.items[activeItem.id]}
             </span>
           </div>
         </div>
@@ -199,7 +225,7 @@ export default function NavBar() {
             className="nav-indicator absolute left-0 top-0 h-[var(--nav-row-h)] w-[2px] bg-orange"
             style={{ "--nav-index": activeIndex } as CSSProperties}
           />
-          {NAV_ITEMS.map(({ num, label, id }) => {
+          {NAV_ITEMS.map(({ num, id }) => {
             const isActive = active === id;
             return (
               <button
@@ -222,7 +248,7 @@ export default function NavBar() {
                       isActive ? "text-paper" : "text-paper/60 group-hover:text-paper/80"
                     }`}
                   >
-                    {label}
+                    {dict.nav.items[id]}
                   </span>
                 </span>
                 <svg
@@ -256,10 +282,17 @@ export default function NavBar() {
               {String(activeIndex + 1).padStart(2, "0")}/04
             </span>
           </div>
+          {/* Switcher di lingua: segmento bordato in fondo alla sidebar. */}
+          <LangSwitch locale={locale} className="mt-3" />
         </div>
       </aside>
 
-      <MobileRail active={active} goTo={goTo} />
+      <MobileRail
+        active={active}
+        goTo={goTo}
+        nav={dict.nav}
+        locale={locale}
+      />
     </>
   );
 }

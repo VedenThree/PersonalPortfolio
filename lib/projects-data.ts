@@ -1,3 +1,5 @@
+import type { Locale } from "@/lib/i18n";
+
 export type ProjectStatus = "DEPLOYED" | "STANDBY" | "IDEA";
 
 export type Project = {
@@ -7,6 +9,11 @@ export type Project = {
   missionId: string;
   title: string;
   desc: string;
+  /** Descrizione inglese: i titoli restano nomi propri e non si traducono. */
+  descEn: string;
+  /** Link esterni, opzionali: chi non li ha (es. repo in trasloco) non mostra anchor. */
+  githubUrl?: string;
+  liveUrl?: string;
   tags: string[];
   completion: number;
   /**
@@ -53,6 +60,11 @@ const PUBLISHED: Project[] = [
     missionId: "PRJ-01",
     title: "Dinamiche Verticali",
     desc: "Sito web con blog dedicato all'attività di arrampicata in quota e su corda. Progetto scolastico di gruppo sviluppato interamente.",
+    descEn:
+      "Website with a blog dedicated to high-altitude and rope climbing. A fully developed group school project.",
+    githubUrl:
+      "https://github.com/fabiogentile-gif/DinamicheVerticali_WebSite",
+    liveUrl: "https://dinamiche-verticali.vercel.app",
     tags: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
     completion: 100,
     placeholder: false,
@@ -64,6 +76,7 @@ const PUBLISHED: Project[] = [
     missionId: "PRJ-02",
     title: "SkillSwap",
     desc: "Piattaforma di scambio competenze in corso di completamento.",
+    descEn: "Skill exchange platform, currently being completed.",
     tags: ["React", "Next.js", "TypeScript", "MongoDB"],
     completion: 50,
     placeholder: false,
@@ -79,6 +92,7 @@ const RESERVED: Project[] = [
     missionId: "PRJ-03",
     title: "Progetto 03",
     desc: "",
+    descEn: "",
     tags: [],
     completion: 0,
     placeholder: true,
@@ -90,6 +104,7 @@ const RESERVED: Project[] = [
     missionId: "PRJ-04",
     title: "Progetto 04",
     desc: "",
+    descEn: "",
     tags: [],
     completion: 0,
     placeholder: true,
@@ -122,3 +137,13 @@ const isPublishable = (p: Project) => {
 export const VISIBLE_PROJECTS: Project[] = PROJECTS.filter(
   (p) => p.visible && isPublishable(p),
 );
+
+/**
+ * Descrizione nella lingua della pagina. Senza inglese (vecchi dati o
+ * segnaposto) ricade sull'italiano: mai una card vuota per un buco di
+ * traduzione.
+ */
+export function projectDesc(p: Project, locale: Locale): string {
+  if (locale === "en" && p.descEn) return p.descEn;
+  return p.desc;
+}

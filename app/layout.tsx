@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans,JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/layouts/navbar";
@@ -30,13 +30,14 @@ const jetbrainMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-// Sito non indicizzato su user-site diretto: bastano titolo e descrizione,
-// niente Open Graph/Twitter né base URL (vedi review.md E3).
-export const metadata: Metadata = {
-  title: "SYS / 01 — Junior Web & Mobile App Developer",
-  description: "Portfolio di uno Junior Web & Mobile App Developer con focus sul frontend moderno: React, Next.js, TypeScript, Tailwind CSS e capacità di trasformare design Figma in interfacce web funzionanti.",
-  // Sito non indicizzato per scelta: blocca anche mirror/deploys di anteprima.
-  robots: { index: false, follow: false },
+// I metadata (titolo/descrizione/robots) vivono nelle pagine (`/` ed `/en`)
+// perché cambiano con la lingua; qui resta solo il viewport.
+
+// Fondo scuro della chrome del browser (barra/indirizzo) sul mobile. I meta non
+// possono leggere i token CSS, quindi l'hex è lo specchio di `--bg-deep` in
+// globals.css: se cambia quel token, cambia anche qui.
+export const viewport: Viewport = {
+  themeColor: "#05070b",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -57,7 +58,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <NavBar />
         {/* px di rails e sidebar: `--rail-w` / `--sidebar-w`, stessa fonte della navbar */}
         <div className="w-full pl-[var(--rail-w)] lg:pl-[var(--sidebar-w)]">
-          <div className="max-w-[1180px] mx-auto px-8 w-full relative z-[1] flex flex-col flex-1">
+          {/* Gutter stretto sotto 640px: a 375px si guadagnano 24px di
+              contenuto, e con il rail laterale già presente tanto ce ne vuole. */}
+          <div className="max-w-[1180px] mx-auto px-5 sm:px-8 w-full relative z-[1] flex flex-col flex-1">
             {children}
           </div>
         </div>

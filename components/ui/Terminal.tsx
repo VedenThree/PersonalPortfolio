@@ -109,7 +109,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               />
             ))}
           </div>
-          <p className="font-mono text-[11px] text-ink-title ml-2 whitespace-nowrap overflow-hidden tracking-[0.14em]">
+          <p className="font-mono text-[11px] text-ink-title ml-2 whitespace-nowrap overflow-hidden text-ellipsis tracking-[0.1em] sm:tracking-[0.14em]">
             {title}
           </p>
         </div>
@@ -121,21 +121,24 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           >
             {status}
           </span>
-          <p className="font-mono text-[10px] text-orange">{version}</p>
+          <p className="hidden font-mono text-[10px] text-orange sm:block">
+            {version}
+          </p>
         </div>
       </div>
 
       {/* Terminal body */}
       <div className="relative">
-        {/* Le card definiscono l'altezza naturale del terminale */}
-<div className="relative z-10 p-5">{children}</div>
+        {/* Le card definiscono l'altezza naturale del terminale. Padding più
+            stretto sotto 640px: ogni px risparmiato è riga di comando in più. */}
+<div className="relative z-10 p-4 sm:p-5">{children}</div>
 
         {/* Righe digitate: overlay assoluto sulle card, pilotato da fuori.
             `terminal-lines` le nasconde sotto reduced-motion, quando nessuna
             timeline le accende e resterebbero sovrapposte alle card. */}
         <div
           ref={layerRef}
-          className="terminal-lines absolute inset-0 z-20 pointer-events-none flex flex-col gap-2.5 px-5 pt-5 pb-5"
+          className="terminal-lines absolute inset-0 z-20 pointer-events-none flex flex-col gap-2.5 px-4 py-4 sm:px-5 sm:py-5"
         >
           {lines.map((line, i) => (
             <div key={line.id} className="flex items-center gap-2.5">
@@ -144,15 +147,17 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   rowsRef.current[i].prompt = el;
                 }}
                 className={cn(
-                  "font-mono text-[13px] shrink-0",
+                  "font-mono text-[11px] sm:text-[13px] shrink-0",
                   line.ready ? "text-orange font-bold" : "text-ink-dim",
                 )}
               >
                 {line.module ? "│" : ">"}
               </span>
+              {/* Sotto 640px la riga può wrappare: con whitespace-pre le righe
+                  lunghe venivano amputate dal bordo del terminale. */}
               <span
                 className={cn(
-                  "font-mono text-[13px] flex-1 overflow-hidden whitespace-pre",
+                  "font-mono text-[11px] sm:text-[13px] flex-1 overflow-hidden whitespace-pre-wrap break-words sm:whitespace-pre sm:break-normal",
                   line.ready
                     ? "text-orange font-bold"
                     : line.module
@@ -184,7 +189,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   ref={(el) => {
                     rowsRef.current[i].res = el;
                   }}
-                  className="font-mono font-bold text-[13px] whitespace-nowrap"
+                  className="font-mono font-bold text-[11px] sm:text-[13px] whitespace-nowrap"
                   style={{ color: line.color ?? "var(--steel)" }}
                 >
                   {line.res}
