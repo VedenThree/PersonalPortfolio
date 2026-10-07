@@ -1,70 +1,48 @@
 # Portfolio — SYS / 01
 
-Portfolio di uno sviluppatore web full stack. Interfaccia single-page costruita
-con Next.js in App Router, animata con AnimeJS e CSS, esportata come sito
-statico.
+Portfolio personale di un Junior Web & Mobile App Developer, in italiano (`/`)
+e inglese (`/en/`). Single-page in Next.js App Router con animazioni Anime.js,
+esportata come sito statico.
+
+## Avvio
+
+```bash
+npm install
+npm run dev    # http://localhost:3000
+npm run build  # export statico in out/
+```
 
 ## Stack
 
 | Ambito | Scelta |
 |---|---|
-| Framework | Next.js 16.3.5 (App Router), React 19.2.8 |
+| Framework | Next.js 16 (App Router), React 19 |
 | Linguaggio | TypeScript |
-| Styling | Tailwind CSS v4 (nessun `tailwind.config.js`: i token stanno in `app/globals.css`) |
-| Animazione | AnimeJS v4 per le timeline, rAF loop per il radar dell'hero |
-| Icone | lucide-react |
+| Styling | Tailwind CSS v4, token in `app/globals.css` |
+| Animazione | Anime.js v4 per le timeline, rAF per il radar dell'hero |
 | Font | Archivo, IBM Plex Sans, IBM Plex Mono, JetBrains Mono (via `next/font`) |
-
-## Comandi
-
-```bash
-npm install
-npm run dev        # dev server su http://localhost:3000
-npm run build      # build di produzione → export statico in out/
-npm run start      # serve out/ con `serve` (vedi "Deploy" sotto)
-npm run lint       # ESLint
-npm run typecheck  # tsc --noEmit
-```
-
-Non esiste un test runner: la verifica è build + typecheck + lint.
-
-## Export statico
-
-`next.config.ts` imposta `output: "export"`, quindi `next build` produce una
-cartella `out/` di file statici. **Non c'è un server Node**: `next start` non
-funziona e non può funzionare.
-
-Per servire la build in locale:
-
-```bash
-npm run start      # equivalente a: serve out
-```
-
-Ogni file statico va pubblicato com'è (GitHub Pages, Netlify, Vercel come
-static output, S3, nginx…). Nessuna funzione server, nessuna API route.
-
-Il form di contatti non fa POST: valida l'input e apre il client di posta con
-il messaggio già composto, perché un export statico non ha dove inviare.
+| Form contatti | Web3Forms, con fallback mailto |
 
 ## Struttura
 
 ```
 app/
-  layout.tsx       # font, metadata, BgScene + NavBar, wrapper di contenuto
-  page.tsx         # Hero · Projects · SectionFlow(Profile, Contact) · Footer
-  globals.css      # token di design, @theme, keyframe, utilities
+  page.tsx         # home italiana: Hero · Projects · Profile · Contact · Footer
+  en/page.tsx      # stessa composizione, dizionario inglese
+  layout.tsx       # font, BgScene + NavBar, wrapper di contenuto
+  globals.css      # token di design, keyframe, utilities
 components/
-  layouts/         # navbar, hero, footer, bg-scene
+  layouts/         # navbar (con switcher IT/EN), hero, footer, bg-scene
   sections/        # projects, profile, contact
-  animations/      # reveal (IntersectionObserver), section-flow (sticky a due pannelli)
-  ui/              # button, input, textarea (primitivi), Terminal, HeroOrbital, CrtSweep, nav-link
+  animations/      # reveal, section-flow
+  ui/              # terminale, radar, primitivi di form
 lib/
-  utils.ts         # cn() = clsx + tailwind-merge
-  projects-data.ts # unica fonte dei progetti (VISIBLE_PROJECTS per il rendering)
+  i18n.ts          # dizionari it/en e percorsi delle due lingue
+  projects-data.ts # unica fonte dei progetti
   section-nav.ts   # navigazione unificata alle sezioni
 ```
 
 ## Note
 
-- Nessun tema chiaro: il design è pensato per uno sfondo scuro fisso.
-- `npm start` usa `serve`, che è in `devDependencies` perché serve solo in locale.
+- Solo tema scuro, nessun toggle.
+- Deploy: contenuto di `out/` su qualsiasi host statico, nessuna funzione server.
