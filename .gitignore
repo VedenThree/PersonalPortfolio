@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#AI bs
+/.agents
+/.impeccable
+/.opencode
+agents.md
+DESIGN.md
+opencode.json
+PRODUCT.md
+skills-lock.json
