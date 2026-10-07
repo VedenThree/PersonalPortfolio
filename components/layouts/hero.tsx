@@ -1,7 +1,7 @@
 import NavLink from "@/components/ui/nav-link";
 import HeroOrbital from "@/components/ui/HeroOrbital";
 
-const TAGS = ["FRONTEND", "BACKEND", "FULLSTACK"] as const;
+const TAGS = ["FRONTEND", "REACT", "NEXT.JS"] as const;
 
 export default function Hero() {
   return (
@@ -24,9 +24,11 @@ export default function Hero() {
         </h1>
 
         <p className="mt-9 max-w-[440px] text-base text-paper-dim">
-          Web Developer Full-Stack specializzato in applicazioni web robuste,
-          scalabili e sicure. Progetto interfacce reattive con React.js, backend
-          performanti con Next.js e architetture dati affidabili con MongoDB.
+          Junior Web & Mobile App Developer con focus sul frontend moderno,
+          esperienza pratica con React, Next.js, TypeScript e Tailwind CSS, e
+          capacità di trasformare design Figma in interfacce web funzionanti.
+          Esperienza complementare nello sviluppo React Native, nell&apos;integrazione
+          di API e nella gestione di database con SQLite e MySQL.
         </p>
 
         <div className="mt-10 flex flex-wrap gap-4">

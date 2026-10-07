@@ -33,8 +33,8 @@ const jetbrainMono = JetBrains_Mono({
 // Sito non indicizzato su user-site diretto: bastano titolo e descrizione,
 // niente Open Graph/Twitter né base URL (vedi review.md E3).
 export const metadata: Metadata = {
-  title: "SYS / 01 — Full Stack Web Developer",
-  description: "Portfolio di uno sviluppatore web full stack: React, Next.js, Node, SQL, MongoDB.",
+  title: "SYS / 01 — Junior Web & Mobile App Developer",
+  description: "Portfolio di uno Junior Web & Mobile App Developer con focus sul frontend moderno: React, Next.js, TypeScript, Tailwind CSS e capacità di trasformare design Figma in interfacce web funzionanti.",
   // Sito non indicizzato per scelta: blocca anche mirror/deploys di anteprima.
   robots: { index: false, follow: false },
 };

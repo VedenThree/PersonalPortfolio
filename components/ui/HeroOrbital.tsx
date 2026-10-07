@@ -34,15 +34,15 @@ export default function HeroOrbital() {
     // nessuna rotazione. Il bearing resta al valore iniziale.
     if (reduced) return;
 
-    // Giri continui antiorari, stessi periodi di prima.
-    const spins: JSAnimation[] = [
-      animate(sweep, {
-        rotate: ["0deg", "-360deg"],
-        duration: SWEEP_PERIOD,
-        ease: "linear",
-        loop: true,
-      }),
-    ];
+    // Giri continui antiorari, stessi periodi di prima. La coda dello sweep
+    // è la fonte unica dell'angolo del fascio (vedi frame).
+    const sweepAnim = animate(sweep, {
+      rotate: ["0deg", "-360deg"],
+      duration: SWEEP_PERIOD,
+      ease: "linear",
+      loop: true,
+    });
+    const spins: JSAnimation[] = [sweepAnim];
     if (ringOuter) {
       spins.push(
         animate(ringOuter, {
@@ -70,8 +70,6 @@ export default function HeroOrbital() {
 
     let raf = 0;
     let last = performance.now();
-    // Angolo del fascio: serve solo ai target, le scritte sui nodi le fa anime.js.
-    let angle = 0;
     let phase = 0;
 
     // Il radar sta solo nell'hero: quando esce dal viewport il loop si ferma,
@@ -96,13 +94,19 @@ export default function HeroOrbital() {
     };
 
     const frame = (now: number) => {
-      // Tempo trascorso, limitato a un frame per non avere salti.
-      const dt = Math.min(64, now - last);
+      // Tempo trascorso reale, senza clamp: deve seguire lo stesso orologio
+      // di anime.js, che dopo uno stall riprende dal tempo vero.
+      const dt = now - last;
       last = now;
 
-      // Avanza sul tempo trascorso, non sul numero di frame: velocità costante.
-      // Stesso passo dello sweep animato, così fascio e target restano sincroni.
-      angle = wrap360(angle - (dt * 360) / SWEEP_PERIOD);
+      // Angolo letto dalla coda stessa che si vede girare: un solo orologio
+      // per fascio e target, quindi un blocco del main thread (il "freeze"
+      // al caricamento) non può più mettere i pallini in ritardo rispetto
+      // alla linea: prima l'angolo avanzava al massimo 64ms per frame e
+      // ogni stall lo faceva restare indietro per sempre.
+      const angle = wrap360(
+        -((sweepAnim.currentTime % SWEEP_PERIOD) / SWEEP_PERIOD) * 360,
+      );
       phase += dt / 1000;
 
       const bearingText = `${String(

@@ -1,11 +1,19 @@
 import Reveal from "@/components/animations/reveal";
 
 const FACTS = [
-  { label: "RUOLO", value: "Full Stack Web Developer" },
+  { label: "RUOLO", value: "Junior Web & Mobile App Developer" },
   { label: "BASE", value: "Italia", sub: "CET · UTC+1" },
-  { label: "MODALITÀ", value: "Remoto · Ibrido", sub: "Fuso allineato al team" },
+  {
+    label: "MODALITÀ",
+    value: "Remoto · Ibrido",
+    sub: "Fuso allineato al team",
+  },
   { label: "LINGUE", value: "Italiano · Inglese", sub: "Doc tecnica inclusa" },
-  { label: "FOCUS", value: "Web · API · Dati", sub: "Layer end-to-end" },
+  {
+    label: "FOCUS",
+    value: "Frontend · API · Dati",
+    sub: "React/Next.js/React Native",
+  },
   { label: "SETTORE", value: "Sviluppo Web", sub: "Applicazioni" },
 ];
 
@@ -21,14 +29,17 @@ const LEVELS: Record<SkillLevel, string> = {
 };
 
 const SKILL_BARS: { name: string; level: SkillLevel }[] = [
-  { name: "HTML", level: 5 },
-  { name: "CSS", level: 5 },
-  { name: "JavaScript", level: 4 },
-  { name: "TypeScript", level: 4 },
   { name: "Next.js", level: 4 },
+  { name: "MySQL", level: 4 },
+  { name: "Wordpress", level: 4 },
+  { name: "React Native", level: 4 },
+  { name: "TypeScript", level: 4 },
   { name: "React", level: 4 },
-  { name: "MySQL", level: 3 },
-  { name: "MongoDB", level: 3 },
+  { name: "HTML & CSS", level: 4 },
+  { name: "Tailwind CSS", level: 3 },
+  { name: "Figma", level: 3 },
+  { name: "Git & GitHub", level: 3 },
+  { name: "PHP", level: 3 },
 ];
 
 export default function Profile() {
@@ -40,7 +51,10 @@ export default function Profile() {
             <p className="font-mono text-[10px] tracking-[0.3em] text-ice-dim uppercase">
               Scheda Profilo
             </p>
-            <span aria-hidden className="font-mono text-[10px] tracking-[0.2em] text-ice-dim/80">
+            <span
+              aria-hidden
+              className="font-mono text-[10px] tracking-[0.2em] text-ice-dim/80"
+            >
               REC // {String(FACTS.length).padStart(2, "0")}
             </span>
           </div>
@@ -70,20 +84,19 @@ export default function Profile() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-start">
-            {/* Metodo */}
+            {/* Approccio */}
             <div className="border border-line rounded bg-surface/60 p-6 md:p-8">
               <p className="font-mono text-[10px] tracking-[0.3em] text-ice-dim uppercase mb-4">
-                Metodo
+                Approccio
               </p>
               <h3 className="font-display text-2xl font-bold text-paper mb-4 tracking-[-0.01em]">
-                Sistemi digitali, riga per riga
+                Frontend e design-to-code
               </h3>
               <p className="text-paper-dim leading-relaxed [&>strong]:text-paper">
-                Progetto interfacce e back-end con lo stesso approccio con cui
-                si mappa un territorio: precisione, struttura e continuità.
-                Ogni sistema nasce da una domanda, si costruisce in{" "}
-                <strong>layer</strong> e si rilascia{" "}
-                <strong>funzionante</strong>.
+                Trasformo design Figma in interfacce React funzionanti con
+                Next.js e TypeScript. Sviluppo applicazioni
+                <strong> modali</strong> e<strong> responsive</strong>,
+                integrando database SQLite/MySQL e API in ogni progetto.
               </p>
             </div>
 
@@ -103,7 +116,9 @@ export default function Profile() {
                     key={s.name}
                     className="grid grid-cols-[110px_1fr_52px] gap-3 items-center py-2.5 border-b border-line/60 last:border-b-0"
                   >
-                    <span className="font-sans text-[13px] text-paper">{s.name}</span>
+                    <span className="font-sans text-[13px] text-paper">
+                      {s.name}
+                    </span>
                     <div
                       className="h-[6px] w-full bg-bg-deep/80 border border-line/40 rounded"
                       role="img"
@@ -125,8 +140,8 @@ export default function Profile() {
 
           <div className="mt-2 md:mt-6 border-t border-line pt-6">
             <p className="font-mono text-[10px] text-ice-dim leading-relaxed">
-              <span className="text-orange">▸</span>{" "}
-              Credenziali e portfolio completo su richiesta.
+              <span className="text-orange">▸</span> Credenziali e portfolio
+              completo su richiesta.
             </p>
           </div>
         </div>

@@ -1,10 +1,10 @@
 /**
  * Geometria dei target del radar di HeroOrbital.
  *
- * Viva qui fuori perché è la parte pura e deterministica del file: senza un
- * modulo dedicato non era testabile, e la sua unica garanzia — che i 6 target
- * non si accostino troppo — dipendeva da un commento. Con `generateTargets`
- * accettando seed e conteggio, l'invariante si verifica una volta per tutte.
+ * Viva qui fuori perché è la parte pura e deterministica del file: il suo
+ * compito è che i 6 target non si accostino troppo, garanzia che oggi sta nel
+ * commento di `ORBITAL_SEED` (gap misurato alla scelta del seed) anziché in
+ * un test — i test di questo repo sono stati rimossi.
  */
 
 export const ORBITAL_BOX = 460;
@@ -30,18 +30,22 @@ export type Target = {
  * gradi (0° in alto, senso orario) e radius in px dal centro. left/top sono il
  * suo tradotto in coordinate di schermo: x = r·sin, y = −r·cos.
  *
- * `rng` è un LCG lineare con periodo completo 2^32: per 6 valori una tantum
- * basta. Il seed di default è fisso perché i target devono restare sempre
- * sugli stessi pixel a ogni reload.
+ * `rng` è mulberry32: lo stesso generatore del primo commit, ripristinato
+ * perché con seed scelto spalma gli angoli molto meglio dell'LCG. Girano
+ * 6×4 chiamate una tantum a caricamento del modulo, quindi per una statica
+ * il costo è microscopico — la scelta conta solo per la distribuzione.
  */
 export const generateTargets = (
   seed: number,
   count: number,
 ): Target[] => {
-  let s = seed >>> 0;
+  let a = seed >>> 0;
   const rng = () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
   return Array.from({ length: count }, () => {
     const angle = rng() * 360;
@@ -63,16 +67,15 @@ export const generateTargets = (
 /**
  * Seed fisso: i target devono restare sugli stessi pixel a ogni reload.
  *
- * La spalma reale di questo seed NON è quella che il vecchio commento
- * prometteva (~55°): la coppia a 68.8° e 73.2° è a 4.44°, quindi due pallini
- * finiscono quasi attaccati. È com'era in produzione e non lo si è cambiato di
- * nascosto, ma il valore è misurato e bloccato dal test, così non è più una
- * promessa non verificata.
- *
- * Cambiare il seed sposta i pallini: se serve una spalma migliore va fatto
- * apposta, aggiornando MIN_GAP in orbital-targets.test.ts insieme al seed.
+ * Scelto con una ricerca su 3M di seed massimizzando il minimo gap angolare
+ * circolare tra i 6 target: qui è 57.47° (perfetto sarebbe 60°) e il massimo
+ * è 69.5°, quindi la spalma è quasi regolare. I predecessori erano peggio —
+ * LCG al seed 58930482: coppia a 4.44°; mulberry al seed vecchio 20260215:
+ * coppia a 0.39°, quasi sovrapposti. Cambiare il seed sposta i pallini, quindi
+ * va ricalcolato il min gap (stessa formula: gap circolari degli angoli
+ * ordinati) invece di fidarsi del caso.
  */
-export const ORBITAL_SEED = 58930482;
+export const ORBITAL_SEED = 1516651;
 export const TARGET_COUNT = 6;
 
 export const TARGETS: Target[] = generateTargets(ORBITAL_SEED, TARGET_COUNT);
