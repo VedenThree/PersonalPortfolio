@@ -64,13 +64,6 @@ lib/
   section-nav.ts   # navigazione unificata alle sezioni
 ```
 
-## Documentazione
-
-- `AGENTS.md` — convenzioni per chi modifica il codice
-- `DESIGN.md` — design system: token, tipografia, componenti, regole
-- `PRODUCT.md` — posizionamento e contenuto
-- `REVIEW.md` — code review con lo stato dei problemi noti
-
 ## Note
 
 - Nessun tema chiaro: il design è pensato per uno sfondo scuro fisso.

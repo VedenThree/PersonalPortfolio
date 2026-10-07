@@ -44,7 +44,7 @@ next-env.d.ts
 /.agents
 /.impeccable
 /.opencode
-agents.md
+AGENTS.md
 DESIGN.md
 opencode.json
 PRODUCT.md

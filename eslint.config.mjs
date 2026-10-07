@@ -12,17 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Non sono codice applicativo: skill degli agenti, immagini e font
-    // generati. Senza questi ignori il lint segnala migliaia di warning
-    // su file che nessuno scrive a mano.
-    ".opencode/**",
-    ".agents/**",
+    // Non è codice applicativo: immagini e font generati. Senza questo
+    // ignore il lint segnala warning su file che nessuno scrive a mano.
     "public/**",
-    "skills-lock.json",
   ]),
   {
     // Il palette vive in app/globals.css. Un hex in un componente è la causa
-    // documentata del drift (vedi REVIEW.md H1): qui si chiude per legge, non
+    // documentata del drift: qui si chiude per legge, non
     // per burocrazia. Gli alpha di un token passano da `var(--x)` o
     // `color-mix(in srgb, var(--x) N%, transparent)`.
     files: ["components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
