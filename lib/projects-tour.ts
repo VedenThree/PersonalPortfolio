@@ -1,4 +1,5 @@
 import { createTimeline, type Timeline } from "animejs";
+import { SECTION_EVENTS, onSectionEvent } from "@/lib/section-nav";
 
 /**
  * Il tour che la navbar avvia su "Progetti": invece di scorrere fino alla
@@ -81,12 +82,14 @@ export function createProjectsTour(opts: TourOptions): ProjectsTour {
   };
 
   // Qualunque input dell'utente interrompe il tour: da quel momento la
-  // pagina torna ad essere pilotata solo dal lettore.
+  // pagina torna ad essere pilotata solo dal lettore. Stesso per una
+  // navigazione da navbar/hero/footer: la nuova destinazione vince.
   const cancel = () => stop();
 
   window.addEventListener("wheel", cancel, { passive: true });
   window.addEventListener("touchstart", cancel, { passive: true });
   window.addEventListener("keydown", cancel);
+  const offStopTour = onSectionEvent(SECTION_EVENTS.stopTour, cancel);
 
   return {
     start,
@@ -95,6 +98,7 @@ export function createProjectsTour(opts: TourOptions): ProjectsTour {
       window.removeEventListener("wheel", cancel);
       window.removeEventListener("touchstart", cancel);
       window.removeEventListener("keydown", cancel);
+      offStopTour();
       stop();
       opts.runway.style.height = "auto";
     },

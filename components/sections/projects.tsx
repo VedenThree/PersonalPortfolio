@@ -20,7 +20,7 @@ import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { createWriter } from "@/lib/write-if-changed";
 import { cn } from "@/lib/utils";
 
-const HOLD_START = 0.65;
+const HOLD_START = 0.825;
 
 const LINES: TerminalLine[] = [
   { id: "init", cmd: "INIT DEPLOY_PIPELINE", res: "OK", color: "var(--green)" },
@@ -165,7 +165,7 @@ export default function Projects() {
       return;
     }
 
-    const tl = createTimeline({ defaults: { ease: "outExpo" } });
+    const tl = createTimeline({ autoplay: false, defaults: { ease: "outExpo" } });
 
     // 1. Terminal window enters small
     tl.add(box, {
@@ -217,9 +217,9 @@ export default function Projects() {
       ease: "inOutExpo",
     });
 
-    // 3b. SOSTA: terminale massimizzato con le parole visibili. Dead-time
-    // accorciato: sullo scroll ci si ferma a leggere senza bruciare corsa.
-    tl.add(box, { opacity: [1, 1], duration: U * 0.7 });
+    // 3b. SOSTA: terminale massimizzato con le parole visibili. Breve:
+    // sullo scroll ci si ferma a leggere senza bruciare corsa.
+    tl.add(box, { opacity: [1, 1], duration: U * 0.5 });
 
     // 4. Clear the screen (lines scroll away)
     const clearTargets = [
@@ -284,19 +284,21 @@ export default function Projects() {
     // le stesse stringhe quando nulla è cambiato.
     const write = createWriter();
 
-    tl.pause();
-    // seek(0) esplicito: senza, il primo render della timeline pausata potrebbe
-    // arrivare dopo il primo scroll e mostrare per un frame il terminale già
-    //digitato. Da qui in poi i valori di partenza sono quelli delle animazioni.
-    tl.seek(0);
+    // Inizializza ogni tween al suo from: cercando solo in avanti il motore
+    // non applica i from dei tween futuri (le card resterebbero visibili
+    // mentre si digita), mentre il passaggio all'indietro li applica a
+    // tutti. Mute a 1: niente callback, solo scritture.
+    tl.seek(tl.duration, 1);
+    tl.seek(0, 1);
     observer = onScroll({
       target: runway,
       enter: () => (pinned ? "top top" : "85% top"),
       leave: () => (pinned ? "end bottom" : "15% top"),
       sync: 0.5,
       onUpdate: (self) => {
-        // La timeline completa al 65% della runway; il tratto residuo
-        // mantiene la sezione sticky ferma (sosta) prima di proseguire.
+        // La timeline completa all'82.5% della runway; il tratto residuo
+        // (~17vh di scroll) mantiene la sezione sticky ferma con le card
+        // visibili prima di proseguire.
         const remap = Math.min(1, self.progress / HOLD_START);
         const p = Math.max(0, Math.min(1, remap));
         const t = tl.duration * p;
@@ -353,7 +355,17 @@ export default function Projects() {
     };
     mq.addEventListener("change", onMqChange);
 
+    // Prima sincronizzazione senza aspettare lo scroll (copre i reload
+    // con scroll ripristinato). Doppio rAF: l'observer risolve il target
+    // al primo tick del motore, un refresh() sincrono lo troverebbe null.
+    let initRaf = requestAnimationFrame(() => {
+      initRaf = requestAnimationFrame(() => {
+        observer?.refresh();
+      });
+    });
+
     return () => {
+      cancelAnimationFrame(initRaf);
       observer?.revert();
       tl.revert();
       loops.forEach((a) => a.revert());

@@ -13,6 +13,8 @@
 export const SECTION_EVENTS = {
   /** projects.tsx lo ascolta per avviare il tour scroll-driven. */
   playProjects: "play-projects",
+  /** Il tour lo ascolta per fermarsi: ogni navigazione ha precedenza. */
+  stopTour: "stop-tour",
 } as const;
 
 export type SectionEvent = (typeof SECTION_EVENTS)[keyof typeof SECTION_EVENTS];
@@ -27,6 +29,9 @@ export function onSectionEvent(name: SectionEvent, handler: () => void) {
 }
 
 export function goToSection(id: string) {
+  // Ogni navigazione da navbar/hero/footer ferma prima il tour: se sta
+  // guidando lo scroll, non deve combattere con la nuova destinazione.
+  emitSectionEvent(SECTION_EVENTS.stopTour);
   if (id === "lavori") {
     emitSectionEvent(SECTION_EVENTS.playProjects);
     return;

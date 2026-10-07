@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { animate } from "animejs";
+import { animate, type JSAnimation } from "animejs";
 import { goToSection } from "@/lib/section-nav";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 
@@ -119,10 +119,13 @@ export default function NavBar() {
   );
   const activeItem = NAV_ITEMS[activeIndex] ?? NAV_ITEMS[0];
   const indicatorRef = useRef<HTMLSpanElement | null>(null);
+  const slideRef = useRef<JSAnimation | null>(null);
   const reduced = usePrefersReducedMotion();
 
-  // L'indicatore scorre con una tween anime.js. Senza JS — o sotto
-  // reduced-motion — resta il posizionamento CSS via --nav-index.
+  // L'indicatore scorre con una tween anime.js dalla posizione corrente:
+  // 4→3 scivola verso l'alto, 2→3 verso il basso, senza salti. Niente
+  // revert al cambio: congeliamo (pause) e ripartiamo da lì. Senza JS —
+  // o sotto reduced-motion — resta il posizionamento CSS via --nav-index.
   useEffect(() => {
     if (reduced) return;
     const el = indicatorRef.current;
@@ -131,15 +134,22 @@ export default function NavBar() {
       parseFloat(
         getComputedStyle(el).getPropertyValue("--nav-row-h"),
       ) || 68;
-    const slide = animate(el, {
+    slideRef.current?.pause();
+    slideRef.current = animate(el, {
       translateY: activeIndex * rowH,
       duration: 500,
       ease: "outExpo",
     });
-    return () => {
-      slide.revert();
-    };
   }, [activeIndex, reduced]);
+
+  // Solo allo smontaggio si ripristina lo stato CSS.
+  useEffect(
+    () => () => {
+      slideRef.current?.revert();
+      slideRef.current = null;
+    },
+    [],
+  );
 
   return (
     <>
