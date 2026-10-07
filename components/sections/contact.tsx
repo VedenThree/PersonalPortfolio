@@ -10,7 +10,7 @@ import type { Dict } from "@/lib/i18n";
 
 // Chiave Web3Forms: incollala qui (dashboard web3forms.com → Access Key).
 // Finché resta vuota, "Invia messaggio" usa il fallback mailto:.
-const WEB3FORMS_KEY = "160b26d7-497a-4191-8048-f89970babcfe";
+const WEB3FORMS_KEY = "02f58154-ba9d-4b42-bf91-e710a06b295f";
 
 // Un solo indirizzo: prima la mailto e la riga della console ne avevano due
 // copie indipendenti.
