@@ -50,6 +50,7 @@ PersonalPortfolio/
 ├── lib/
 │   ├── i18n.ts
 │   ├── projects-data.ts
+│   ├── skill-icons.ts
 │   └── utils.ts
 ├── public/
 ├── next.config.ts

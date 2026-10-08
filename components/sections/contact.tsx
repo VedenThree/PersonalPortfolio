@@ -138,7 +138,7 @@ export default function Contact({ dict }: { dict: Dict["contact"] }) {
             <br />
             <span className="text-orange">{dict.titleAccent}</span>
           </h2>
-          <p className="font-sans text-[16px] text-paper-dim leading-[1.8] max-w-[440px] mb-8">
+          <p className="font-sans text-[16px] text-paper-dim leading-[1.8] max-w-110 mb-8">
             {dict.intro}
           </p>
 
@@ -152,7 +152,7 @@ export default function Contact({ dict }: { dict: Dict["contact"] }) {
                   {[0, 1, 2].map((i) => (
                     <span
                       key={i}
-                      className={`size-[9px] rounded-full ${i === 0 ? "bg-orange" : "bg-steel"}`}
+                      className={`size-2.25 rounded-full ${i === 0 ? "bg-orange" : "bg-steel"}`}
                     />
                   ))}
                 </div>
@@ -161,7 +161,7 @@ export default function Contact({ dict }: { dict: Dict["contact"] }) {
                 </p>
               </div>
               <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-green shrink-0">
-                <span className="size-[6px] rounded-full bg-green animate-pulse-glow" />
+                <span className="size-1.5 rounded-full bg-green animate-pulse-glow" />
                 ONLINE
               </span>
             </div>
@@ -177,7 +177,7 @@ export default function Contact({ dict }: { dict: Dict["contact"] }) {
                   </span>
                 </p>
               ))}
-              <p className="m-0 mt-2 border-t border-panel-line pt-2.5 text-xs tracking-[0.1em] text-ink-faint">
+              <p className="m-0 mt-2 border-t border-panel-line pt-2.5 text-xs tracking-widest text-ink-faint">
                 ENCRYPTION · TLS 1.3 // END-TO-END
               </p>
             </div>
@@ -206,7 +206,7 @@ export default function Contact({ dict }: { dict: Dict["contact"] }) {
           <h3 className="font-display font-bold text-xl text-paper tracking-[-0.01em] leading-tight mb-2">
             {dict.formTitle}
           </h3>
-          <p className="font-sans text-[14px] text-paper-dim leading-[1.7] mb-6 max-w-[420px]">
+          <p className="font-sans text-[14px] text-paper-dim leading-[1.7] mb-6 max-w-105">
             {dict.formIntro}
           </p>
           {status === "sent" ? (

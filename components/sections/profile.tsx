@@ -1,4 +1,6 @@
 import Reveal from "@/components/animations/reveal";
+import { SKILL_ICONS, SKILL_TONE_CLASS } from "@/lib/skill-icons";
+import { cn } from "@/lib/utils";
 import type { Dict } from "@/lib/i18n";
 
 // Un livello non è un numero arbitrario: se `SKILL_BARS` aggiungeva un 2 qui
@@ -8,18 +10,50 @@ import type { Dict } from "@/lib/i18n";
 type SkillLevel = 3 | 4 | 5;
 
 const SKILL_BARS: { name: string; level: SkillLevel }[] = [
-  { name: "Next.js", level: 4 },
-  { name: "MySQL", level: 4 },
-  { name: "Wordpress", level: 4 },
-  { name: "React Native", level: 4 },
+  { name: "Next.js", level: 5 },
+  { name: "MySQL", level: 5 },
+  { name: "Wordpress", level: 5 },
+  { name: "React.js", level: 4 },
   { name: "TypeScript", level: 4 },
-  { name: "React", level: 4 },
   { name: "HTML & CSS", level: 4 },
   { name: "Tailwind CSS", level: 3 },
   { name: "Figma", level: 3 },
   { name: "Git & GitHub", level: 3 },
   { name: "PHP", level: 3 },
 ];
+
+// Icona Devicon della skill nella tinta di categoria via currentColor.
+// Senza voce in mappa: niente, mai un buco rotto.
+function SkillIcon({ name, className }: { name: string; className?: string }) {
+  const icon = SKILL_ICONS[name];
+  if (!icon) return null;
+  return (
+    <svg
+      viewBox="0 0 128 128"
+      fill="currentColor"
+      aria-hidden
+      className={cn(
+        "shrink-0",
+        SKILL_TONE_CLASS[icon.tone],
+        icon.boost && "scale-110",
+        className,
+      )}
+    >
+      {icon.circles?.map((c, j) => (
+        <circle key={`c${j}`} cx={c.cx} cy={c.cy} r={c.r} />
+      ))}
+      {icon.paths.map((p, j) => (
+        <path
+          key={j}
+          d={p.d}
+          fillRule={p.evenodd ? "evenodd" : undefined}
+          clipRule={p.evenodd ? "evenodd" : undefined}
+          className={p.light ? "fill-paper-bright" : undefined}
+        />
+      ))}
+    </svg>
+  );
+}
 
 export default function Profile({ dict }: { dict: Dict["profile"] }) {
   const levels = dict.levels;
@@ -86,7 +120,7 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                 <p className="font-mono text-[10px] tracking-[0.25em] text-ice uppercase">
                   {dict.stackTitle}
                 </p>
-                <p className="font-mono text-[8px] tracking-[0.1em] text-ice-dim/70 uppercase">
+                <p className="font-mono text-[8px] tracking-widest text-ice-dim/70 uppercase">
                   3 {levels[3]} · 4 {levels[4]} · 5 {levels[5]}
                 </p>
               </div>
@@ -94,22 +128,21 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                 {SKILL_BARS.map((s) => (
                   <div
                     key={s.name}
-                    // Sotto sm due colonne larghe a metà e nessuna etichetta di
-                    // livello: con le tre colonne fisse (110px + gap) a 320px
-                    // restavano 61px e il nome veniva tagliato. Il livello
-                    // resta nell'aria-label della barra.
-                    className="grid grid-cols-2 gap-3 items-center py-2.5 border-b border-line/60 last:border-b-0 sm:grid-cols-[110px_1fr_52px]"
+                    // Sotto sm la colonna nome è un filo più larga (1.15fr) per
+                    // far posto all'icona ingrandita senza troncare i nomi.
+                    className="grid grid-cols-[1.15fr_1fr] gap-3 items-center py-2.5 border-b border-line/60 last:border-b-0 sm:grid-cols-[110px_1fr_52px]"
                   >
-                    <span className="font-sans text-[13px] text-paper">
-                      {s.name}
+                    <span className="flex min-w-0 items-center gap-1.5 sm:gap-2 font-sans text-[12px] sm:text-[13px] text-paper">
+                      <SkillIcon name={s.name} className="size-3.5 sm:size-5" />
+                      <span className="truncate">{s.name}</span>
                     </span>
                     <div
-                      className="h-[6px] w-full bg-bg-deep/80 border border-line/40 rounded"
+                      className="h-1.5 w-full bg-bg-deep/80 border border-line/40 rounded"
                       role="img"
                       aria-label={`${s.name}: ${dict.levelWord} ${s.level} ${dict.ofWord} 5 (${levels[s.level]})`}
                     >
                       <div
-                        className="h-full bg-gradient-to-r from-orange/50 to-orange rounded"
+                        className="h-full bg-linear-to-r from-orange/50 to-orange rounded"
                         style={{ width: `${s.level * 20}%` }}
                       />
                     </div>
@@ -123,9 +156,9 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
           </div>
 
           <div className="mt-2 md:mt-6 border-t border-line pt-6">
-              <p className="font-mono text-[10px] text-ice-dim leading-relaxed">
-                <span className="text-orange">▸</span> {dict.footnote}
-              </p>
+            <p className="font-mono text-[10px] text-ice-dim leading-relaxed">
+              <span className="text-orange">▸</span> {dict.footnote}
+            </p>
           </div>
         </div>
       </section>
