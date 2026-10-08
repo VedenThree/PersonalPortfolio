@@ -1,4 +1,6 @@
 import Reveal from "@/components/animations/reveal";
+import CountUp from "@/components/ui/count-up";
+import ScrambleText from "@/components/ui/scramble-text";
 import SkillBar from "@/components/ui/skill-bar";
 import { SKILL_ICONS, SKILL_TONE_CLASS } from "@/lib/skill-icons";
 import { cn } from "@/lib/utils";
@@ -71,7 +73,7 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
               aria-hidden
               className="font-mono text-[10px] tracking-[0.2em] text-ice-dim/80"
             >
-              REC // {String(dict.facts.length).padStart(2, "0")}
+              REC // <CountUp to={dict.facts.length} />
             </span>
           </div>
           <h2 className="font-display text-[clamp(28px,3.5vw,48px)] font-bold text-paper leading-[1.04]">
@@ -82,14 +84,16 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
         <div className="flex flex-col gap-6 md:gap-10">
           {/* Dati essenziali in una striscia leggibile */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 border border-line rounded overflow-hidden divide-y divide-line/60 sm:divide-y-0 sm:divide-x sm:divide-line/60 bg-surface/40">
-            {dict.facts.map((f) => (
+            {dict.facts.map((f, fi) => (
               <div key={f.label} className="px-4 py-4">
                 <p className="font-mono text-[9px] tracking-[0.2em] text-ice-dim uppercase pb-1.5">
                   {f.label}
                 </p>
-                <p className="text-[14px] font-medium text-paper leading-snug">
-                  {f.value}
-                </p>
+                <ScrambleText
+                  text={f.value}
+                  index={fi}
+                  className="text-[14px] font-medium text-paper leading-snug"
+                />
                 {f.sub && (
                   <p className="font-mono text-[9px] text-ice-dim/70 mt-1 tracking-[0.06em]">
                     {f.sub}
@@ -153,9 +157,12 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
           </div>
 
           <div className="mt-2 md:mt-6 border-t border-line pt-6">
-            <p className="font-mono text-[10px] text-ice-dim leading-relaxed">
-              <span className="text-orange">▸</span> {dict.footnote}
-            </p>
+              <p className="font-mono text-[10px] text-ice-dim leading-relaxed">
+                <span className="text-orange">▸</span> {dict.footnote}{" "}
+                <span aria-hidden className="text-orange animate-pulse-glow">
+                  ▊
+                </span>
+              </p>
           </div>
         </div>
       </section>
