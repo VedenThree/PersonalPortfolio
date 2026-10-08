@@ -1,4 +1,5 @@
 import Reveal from "@/components/animations/reveal";
+import SkillBar from "@/components/ui/skill-bar";
 import { SKILL_ICONS, SKILL_TONE_CLASS } from "@/lib/skill-icons";
 import { cn } from "@/lib/utils";
 import type { Dict } from "@/lib/i18n";
@@ -15,6 +16,7 @@ const SKILL_BARS: { name: string; level: SkillLevel }[] = [
   { name: "Wordpress", level: 5 },
   { name: "React.js", level: 4 },
   { name: "TypeScript", level: 4 },
+  { name: "JavaScript", level: 4 },
   { name: "HTML & CSS", level: 4 },
   { name: "Tailwind CSS", level: 3 },
   { name: "Figma", level: 3 },
@@ -125,7 +127,7 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                 </p>
               </div>
               <div className="px-5 py-2">
-                {SKILL_BARS.map((s) => (
+                {SKILL_BARS.map((s, idx) => (
                   <div
                     key={s.name}
                     // Sotto sm la colonna nome è un filo più larga (1.15fr) per
@@ -136,16 +138,11 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                       <SkillIcon name={s.name} className="size-3.5 sm:size-5" />
                       <span className="truncate">{s.name}</span>
                     </span>
-                    <div
-                      className="h-1.5 w-full bg-bg-deep/80 border border-line/40 rounded"
-                      role="img"
-                      aria-label={`${s.name}: ${dict.levelWord} ${s.level} ${dict.ofWord} 5 (${levels[s.level]})`}
-                    >
-                      <div
-                        className="h-full bg-linear-to-r from-orange/50 to-orange rounded"
-                        style={{ width: `${s.level * 20}%` }}
-                      />
-                    </div>
+                    <SkillBar
+                      level={s.level}
+                      index={idx}
+                      label={`${s.name}: ${dict.levelWord} ${s.level} ${dict.ofWord} 5 (${levels[s.level]})`}
+                    />
                     <span className="hidden font-mono text-[9px] text-ice-dim uppercase text-right tabular-nums sm:block">
                       {levels[s.level]}
                     </span>
