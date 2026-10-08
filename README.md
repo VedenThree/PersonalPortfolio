@@ -41,8 +41,3 @@ lib/
   projects-data.ts # unica fonte dei progetti
   section-nav.ts   # navigazione unificata alle sezioni
 ```
-
-## Note
-
-- Solo tema scuro, nessun toggle.
-- Deploy: GitHub Pages via Actions (`.github/workflows/deploy.yml`) su `VedenThree.github.io/PersonalPortfolio/` — nel repo: Settings → Pages → Source: GitHub Actions.
