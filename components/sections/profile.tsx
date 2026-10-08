@@ -1,6 +1,8 @@
 import Reveal from "@/components/animations/reveal";
 import CountUp from "@/components/ui/count-up";
 import ScrambleText from "@/components/ui/scramble-text";
+import ApproachBox from "@/components/ui/approach-box";
+import ProfileBox from "@/components/ui/profile-box";
 import SkillBar from "@/components/ui/skill-bar";
 import { SKILL_ICONS, SKILL_TONE_CLASS } from "@/lib/skill-icons";
 import { cn } from "@/lib/utils";
@@ -82,10 +84,15 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
         </div>
 
         <div className="flex flex-col gap-6 md:gap-10">
-          {/* Dati essenziali in una striscia leggibile */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 border border-line rounded overflow-hidden divide-y divide-line/60 sm:divide-y-0 sm:divide-x sm:divide-line/60 bg-surface/40">
+          {/* Dati essenziali in una striscia leggibile: stesso reveal del box Approccio */}
+          <ProfileBox className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 border border-line rounded divide-y divide-line/60 sm:divide-y-0 sm:divide-x sm:divide-line/60 bg-surface/40">
             {dict.facts.map((f, fi) => (
-              <div key={f.label} className="px-4 py-4">
+              <div
+                key={f.label}
+                data-ap
+                style={{ "--d": `${fi * 60}ms` } as React.CSSProperties}
+                className="approach-line px-4 py-4"
+              >
                 <p className="font-mono text-[9px] tracking-[0.2em] text-ice-dim uppercase pb-1.5">
                   {f.label}
                 </p>
@@ -101,28 +108,19 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                 )}
               </div>
             ))}
-          </div>
+          </ProfileBox>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-start">
-            {/* Approccio */}
-            <div className="border border-line rounded bg-surface/60 p-6 md:p-8">
-              <p className="font-mono text-[10px] tracking-[0.3em] text-ice-dim uppercase mb-4">
-                {dict.approachKicker}
-              </p>
-              <h3 className="font-display text-2xl font-bold text-paper mb-4 tracking-[-0.01em]">
-                {dict.approachTitle}
-              </h3>
-              <p className="text-paper-dim leading-relaxed [&>strong]:text-paper">
-                {dict.approachBodyA}
-                <strong> {dict.approachStrong1}</strong> {dict.approachMid}
-                <strong> {dict.approachStrong2}</strong>
-                {dict.approachBodyB}
-              </p>
-            </div>
+            {/* Approccio: scansione design-to-code all'ingresso */}
+            <ApproachBox dict={dict} />
 
-            {/* Stack con livelli leggibili */}
-            <div className="border border-line rounded bg-surface/60 overflow-hidden">
-              <div className="px-5 py-3 border-b border-line bg-bg-deep/60 flex items-center justify-between">
+            {/* Stack con livelli leggibili: stesso reveal del box Approccio */}
+            <ProfileBox className="border border-line rounded bg-surface/60">
+              <div
+                data-ap
+                style={{ "--d": "0ms" } as React.CSSProperties}
+                className="approach-line px-5 py-3 border-b border-line bg-bg-deep/60 flex items-center justify-between"
+              >
                 <p className="font-mono text-[10px] tracking-[0.25em] text-ice uppercase">
                   {dict.stackTitle}
                 </p>
@@ -134,9 +132,11 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                 {SKILL_BARS.map((s, idx) => (
                   <div
                     key={s.name}
+                    data-ap
+                    style={{ "--d": `${Math.min(120 + idx * 35, 450)}ms` } as React.CSSProperties}
                     // Sotto sm la colonna nome è un filo più larga (1.15fr) per
                     // far posto all'icona ingrandita senza troncare i nomi.
-                    className="grid grid-cols-[1.15fr_1fr] gap-3 items-center py-2.5 border-b border-line/60 last:border-b-0 sm:grid-cols-[110px_1fr_52px]"
+                    className="approach-line grid grid-cols-[1.15fr_1fr] gap-3 items-center py-2.5 border-b border-line/60 last:border-b-0 sm:grid-cols-[110px_1fr_52px]"
                   >
                     <span className="flex min-w-0 items-center gap-1.5 sm:gap-2 font-sans text-[12px] sm:text-[13px] text-paper">
                       <SkillIcon name={s.name} className="size-3.5 sm:size-5" />
@@ -153,7 +153,7 @@ export default function Profile({ dict }: { dict: Dict["profile"] }) {
                   </div>
                 ))}
               </div>
-            </div>
+            </ProfileBox>
           </div>
 
           <div className="mt-2 md:mt-6 border-t border-line pt-6">
