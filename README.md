@@ -137,4 +137,4 @@ Italy
 
 ## License
 
-This repository is a personal portfolio project. Source code, personal content, and portfolio assets are intended for this project and should not be redistributed as personal content belonging to another individual.
+See the [LICENSE](./LICENSE) file for usage and redistribution terms.
