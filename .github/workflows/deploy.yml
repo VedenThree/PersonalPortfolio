@@ -1,4 +1,4 @@
-# Deploy su GitHub Project Pages (VedenThree.github.io/PersonalPortfolio).
+# Deploy su GitHub User Pages (vedenthree.github.io, root).
 #
 # Ad ogni push su main: installa, compila l'export statico e pubblica out/.
 # Nel repo su GitHub: Settings → Pages → Build and deployment → Source:

@@ -175,6 +175,24 @@
   }
 }
 
+/* Hero: glow tenue sulla parola accento + sweep dei bottoni. Tutto CSS-only:
+   senza animazione (reduced-motion / no-JS) resta tutto leggibile. */
+@keyframes hero-accent-breathe {
+  0%,
+  100% {
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.45),
+      0 0 16px color-mix(in srgb, var(--orange) 28%, transparent),
+      0 10px 36px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.45),
+      0 0 26px color-mix(in srgb, var(--orange) 42%, transparent),
+      0 10px 36px rgba(0, 0, 0, 0.4);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -370,6 +388,60 @@
     border-right-color: var(--orange); /* due lati colorati = ~semicerchio */
   }
 
+  /* Parola accento: glow volutamente tenue (sotto l'intensità originale),
+     con respiro lento. Solo text-shadow, nessun repaint di layout.
+     Sotto reduced-motion resta il glow statico. */
+  .hero-accent {
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.45),
+      0 0 16px color-mix(in srgb, var(--orange) 28%, transparent),
+      0 10px 36px rgba(0, 0, 0, 0.4);
+    animation: hero-accent-breathe 4s ease-in-out 1.2s infinite;
+  }
+
+  /* CTA hero: sweep di luce solo su hover/focus + ombra con offset e blur. */
+  .hero-cta {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero-cta::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 55%;
+    left: -80%;
+    background: linear-gradient(
+      105deg,
+      transparent,
+      color-mix(in srgb, var(--paper) 16%, transparent),
+      transparent
+    );
+    transform: skewX(-18deg);
+    transition: left 600ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .hero-cta:hover::after,
+  .hero-cta:focus-visible::after {
+    left: 135%;
+  }
+  .hero-cta-primary:hover,
+  .hero-cta-primary:focus-visible {
+    box-shadow:
+      0 10px 32px -8px color-mix(in srgb, var(--orange) 55%, transparent),
+      0 2px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-accent {
+      animation: none;
+    }
+    .hero-cta::after {
+      display: none;
+    }
+  }
+
   /* L'indicatore della voce attiva. Il passo è un multiplo di --nav-row-h
      calcolato in CSS: in TS c'è solo l'indice, nessun px da tenere allineato. */
   .nav-indicator {
@@ -386,6 +458,11 @@
 }
 
 @layer utilities {
+  ::selection {
+    background: var(--orange);
+    color: var(--ink-deep);
+  }
+
   /* L'anello di focus globale è una garanzia di accessibilità, non un tema:
      sta in utilities perché un `focus:outline-none` esplicito possa
      davvero cancellarlo. */

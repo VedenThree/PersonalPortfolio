@@ -16,14 +16,13 @@ export type Locale = "it" | "en";
 export const LOCALES: readonly Locale[] = ["it", "en"];
 
 /**
- * Prefisso di deploy (Project Pages). Stessa stringa di `basePath` in
- * next.config.ts: Next prefissa da solo gli asset generati, ma i link scritti
- * a mano (switcher lingua) devono farlo qui.
+ * Prefisso di deploy (User Pages: root, stringa vuota). Stessa origine di
+ * `basePath` in next.config.ts (assente): Next prefissa da solo gli asset
+ * generati, ma i link scritti a mano (switcher lingua) devono farlo qui.
  */
-export const BASE_PATH = "/PersonalPortfolio";
+export const BASE_PATH = "";
 
-/** Dal pathname alla lingua: vale con o senza prefisso (`/en` e
- * `/PersonalPortfolio/en/` sono entrambi inglesi). */
+/** Dal pathname alla lingua: vale con o senza prefisso (`/en` è inglese). */
 export function localeFromPathname(pathname: string | null): Locale {
   if (!pathname) return "it";
   return /(^|\/)en(\/|$)/.test(pathname) ? "en" : "it";
@@ -124,7 +123,7 @@ const it: Dict = {
     titleAccent: "sistema",
     titleB: "alla volta.",
     intro:
-      "Junior Web & Mobile App Developer con focus sul frontend moderno, esperienza pratica con React, Next.js, TypeScript e Tailwind CSS, e capacità di trasformare design Figma in interfacce web funzionanti. Esperienza complementare nello sviluppo React Native, nell'integrazione di API e nella gestione di database con SQLite e MySQL.",
+      "Web developer con focus sul frontend moderno. Realizzo interfacce responsive con React, Next.js e TypeScript, trasformando idee e design in esperienze web funzionali.",
     ctaProjects: "Vedi i progetti",
     ctaContact: "Contatti",
   },
@@ -249,7 +248,7 @@ const en: Dict = {
     titleAccent: "system",
     titleB: "at a time.",
     intro:
-      "Junior Web & Mobile App Developer focused on modern frontend, with hands-on experience in React, Next.js, TypeScript and Tailwind CSS, and the ability to turn Figma designs into working web interfaces. Complementary experience in React Native development, API integration and database management with SQLite and MySQL.",
+      "Web developer focused on modern frontend development. I build responsive interfaces with React, Next.js and TypeScript, turning ideas and designs into functional web experiences.",
     ctaProjects: "View projects",
     ctaContact: "Contact",
   },

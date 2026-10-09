@@ -78,7 +78,7 @@ output: "export"
 
 The production build generates a static `out/` directory, allowing the website to be hosted on services such as GitHub Pages.
 
-The project is configured with a `basePath` for GitHub Pages deployment.
+The project is configured for GitHub User Pages deployment (root, no `basePath`).
 
 ## Getting Started
 
@@ -125,7 +125,7 @@ The project is configured for GitHub Pages using Next.js static export.
 
 Expected deployment:
 
-[PersonalPortfolio on GitHub Pages](https://vedenthree.github.io/PersonalPortfolio)
+[Portfolio on GitHub Pages](https://vedenthree.github.io)
 
 ## Author
 
